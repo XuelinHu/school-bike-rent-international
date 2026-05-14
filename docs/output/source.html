@@ -1,0 +1,1847 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>国际化学生单车租赁管理软件 V1.0 源代码</title>
+<style>
+@page { size: A4; margin: 18mm 15mm 24mm 15mm; }
+body { font-family: "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; color: #111827; line-height: 1.62; font-size: 13px; }
+h1 { text-align: center; font-size: 24px; margin: 16px 0 22px; }
+h2 { font-size: 18px; margin-top: 22px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+h3 { font-size: 15px; margin-top: 18px; }
+pre { white-space: pre-wrap; word-break: break-word; background: #f8fafc; border: 1px solid #e5e7eb; padding: 8px; font-size: 10px; line-height: 1.35; }
+code { font-family: "Noto Sans Mono CJK SC", Consolas, monospace; }
+img { display: block; max-width: 94%; max-height: 185mm; margin: 10px auto 6px; object-fit: contain; }
+.caption { text-align: center; font-size: 12px; color: #374151; margin: 0 0 8px; }
+strong { font-weight: 700; }
+.shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; margin: 8px 0 4px; break-inside: avoid; }
+.shot-pair img { width: 100%; max-width: 100%; max-height: 118mm; margin: 0 auto 4px; }
+.shot-label { text-align: center; font-size: 11px; color: #374151; margin-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; border-top: 1.5px solid #111827; border-bottom: 1.5px solid #111827; }
+th { border-bottom: 1px solid #111827; }
+td, th { padding: 6px 8px; text-align: left; }
+p { margin: 7px 0; text-align: justify; }
+</style>
+</head>
+<body>
+<h1>国际化学生单车租赁管理软件源代码</h1>
+<h2>源代码属性结构说明</h2>
+<p>本源码稿整理 国际化学生单车租赁管理软件V1.0 的主要自研源码，技术栈包括 Node.js、Express、Vue3、Vite、MySQL、HTML5、CSS3 和 JavaScript。源码根目录分为 backend、frontend、docs、scripts、tmp 等一级目录，其中 backend 保存服务端接口、鉴权、权限、数据库连接、SQL 和初始化脚本，frontend 保存 H5 页面、路由、接口封装、国际化资源、状态管理和页面样式，scripts 保存软著材料生成辅助脚本，docs 保存软著材料、截图和图示。本文纳入后端接口主链路、数据库结构、前端页面主链路、运行配置、初始化脚本和 README 中与部署运行直接相关的内容，不包含 node_modules、dist、第三方依赖源码和构建产物。源码稿按照“后端入口与基础设施、后端业务接口、数据库脚本、前端入口与路由、前端页面与样式、运行说明”的顺序编排，便于审查人员从系统入口逐步理解业务实现。</p>
+<h2>三级目录结构</h2>
+<pre><code class="language-text">backend
+backend/src
+backend/src/routes
+backend/src/middleware
+backend/src/config
+backend/src/utils
+backend/sql
+frontend
+frontend/src
+frontend/src/views
+frontend/src/router
+frontend/src/api
+frontend/src/i18n
+frontend/src/stores
+frontend/src/assets
+scripts
+README.md
+</code></pre>
+<h2>backend/package.json</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;student-bike-rental-backend&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;scripts&quot;: {
+    &quot;dev&quot;: &quot;nodemon src/server.js&quot;,
+    &quot;start&quot;: &quot;node src/server.js&quot;,
+    &quot;db:init&quot;: &quot;node src/utils/initDb.js&quot;,
+    &quot;seed&quot;: &quot;node src/utils/seedUsers.js&quot;,
+    &quot;seed:demo&quot;: &quot;node src/utils/seedDemoData.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;bcryptjs&quot;: &quot;^2.4.3&quot;,
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;dotenv&quot;: &quot;^16.4.7&quot;,
+    &quot;express&quot;: &quot;^4.21.2&quot;,
+    &quot;jsonwebtoken&quot;: &quot;^9.0.2&quot;,
+    &quot;mysql2&quot;: &quot;^3.11.5&quot;,
+    &quot;nanoid&quot;: &quot;^5.0.9&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;nodemon&quot;: &quot;^3.1.9&quot;
+  }
+}
+
+</code></pre>
+<h2>backend/.env.example</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-example">PORT=3000
+JWT_SECRET=replace_with_a_long_random_secret
+DB_HOST=***
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=***
+DB_NAME=student_bike_rental
+
+</code></pre>
+<h2>backend/src/app.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import bikeRoutes from './routes/bikes.js';
+import stationRoutes from './routes/stations.js';
+import orderRoutes from './routes/orders.js';
+import maintenanceRoutes from './routes/maintenance.js';
+import announcementRoutes from './routes/announcements.js';
+import dashboardRoutes from './routes/dashboard.js';
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/health', (_req, res) =&gt; res.json({ code: 200, message: 'success', data: { status: 'ok' } }));
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/bikes', bikeRoutes);
+app.use('/api/stations', stationRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+
+app.use((req, res) =&gt; res.status(404).json({ code: 404, message: `Not found: ${req.path}` }));
+app.use((err, _req, res, _next) =&gt; {
+  const status = err.status || 500;
+  res.status(status).json({ code: status, message: err.message || 'Internal server error' });
+});
+
+export default app;
+
+</code></pre>
+<h2>backend/src/server.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import app from './app.js';
+
+const port = Number(process.env.PORT || 3000);
+app.listen(port, () =&gt; {
+  console.log(`Student bike rental API running at http://localhost:${port}`);
+});
+
+</code></pre>
+<h2>backend/src/config/db.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export const pool = mysql.createPool({
+  host: process.env.DB_HOST || '***',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '***',
+  database: process.env.DB_NAME || 'student_bike_rental',
+  waitForConnections: true,
+  connectionLimit: 10,
+  namedPlaceholders: true
+});
+
+export async function tx(work) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const result = await work(conn);
+    await conn.commit();
+    return result;
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
+}
+
+</code></pre>
+<h2>backend/src/middleware/auth.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import jwt from 'jsonwebtoken';
+import { HttpError } from '../utils/errors.js';
+
+export function auth(required = true) {
+  return (req, _res, next) =&gt; {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+    if (!token) {
+      if (!required) return next();
+      return next(new HttpError(401, 'Unauthorized'));
+    }
+    try {
+      req.user = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+      return next();
+    } catch {
+      return next(new HttpError(401, 'Invalid token'));
+    }
+  };
+}
+
+</code></pre>
+<h2>backend/src/middleware/role.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { HttpError } from '../utils/errors.js';
+
+export function allow(...roles) {
+  return (req, _res, next) =&gt; {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(new HttpError(403, 'Forbidden'));
+    }
+    return next();
+  };
+}
+
+</code></pre>
+<h2>backend/src/routes/auth.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { asyncHandler, ok } from '../utils/response.js';
+import { HttpError } from '../utils/errors.js';
+
+const router = Router();
+const publicUserFields = 'id, username, name, email, phone, role, student_no, nationality, language, status, created_at';
+
+router.post('/register', asyncHandler(async (req, res) =&gt; {
+  const { username, password, name, email, phone, student_no, nationality, language = 'zh-CN' } = req.body;
+  if (!username || !password) throw new HttpError(400, 'Username and password are required');
+  const hash = await bcrypt.hash(password, 10);
+  await pool.execute(
+    `INSERT INTO users (username, password, name, email, phone, role, student_no, nationality, language, status)
+     VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, 'active')`,
+    [username, hash, name || username, email || null, phone || null, student_no || null, nationality || null, language]
+  );
+  ok(res, null, 'registered');
+}));
+
+router.post('/login', asyncHandler(async (req, res) =&gt; {
+  const { username, password } = req.body;
+  const [rows] = await pool.execute(`SELECT * FROM users WHERE username = ? AND status = 'active'`, [username]);
+  const user = rows[0];
+  if (!user || !(await bcrypt.compare(password || '', user.password))) {
+    throw new HttpError(401, 'Invalid username or password');
+  }
+  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
+  delete user.password;
+  ok(res, { token, user });
+}));
+
+router.get('/profile', auth(), asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute(`SELECT ${publicUserFields} FROM users WHERE id = ?`, [req.user.id]);
+  ok(res, rows[0]);
+}));
+
+router.put('/profile', auth(), asyncHandler(async (req, res) =&gt; {
+  const { name, email, phone, nationality, language } = req.body;
+  await pool.execute(
+    'UPDATE users SET name=?, email=?, phone=?, nationality=?, language=? WHERE id=?',
+    [name, email, phone, nationality, language, req.user.id]
+  );
+  ok(res);
+}));
+
+router.put('/password', auth(), asyncHandler(async (req, res) =&gt; {
+  const { oldPassword, newPassword } = req.body;
+  const [rows] = await pool.execute('SELECT password FROM users WHERE id=?', [req.user.id]);
+  if (!rows[0] || !(await bcrypt.compare(oldPassword || '', rows[0].password))) throw new HttpError(400, 'Old password is incorrect');
+  await pool.execute('UPDATE users SET password=? WHERE id=?', [await bcrypt.hash(newPassword, 10), req.user.id]);
+  ok(res);
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/users.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { pool } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+
+const router = Router();
+router.use(auth(), allow('admin'));
+
+router.get('/', asyncHandler(async (_req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT id,username,name,email,phone,role,student_no,nationality,language,status,created_at FROM users ORDER BY id DESC');
+  ok(res, rows);
+}));
+
+router.get('/:id', asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT id,username,name,email,phone,role,student_no,nationality,language,status,created_at FROM users WHERE id=?', [req.params.id]);
+  ok(res, rows[0] || null);
+}));
+
+router.put('/:id', asyncHandler(async (req, res) =&gt; {
+  const { name, email, phone, role, student_no, nationality, language, status, password } = req.body;
+  if (password) {
+    await pool.execute(
+      'UPDATE users SET password=?, name=?, email=?, phone=?, role=?, student_no=?, nationality=?, language=?, status=? WHERE id=?',
+      [await bcrypt.hash(password, 10), name, email, phone, role, student_no, nationality, language, status, req.params.id]
+    );
+  } else {
+    await pool.execute(
+      'UPDATE users SET name=?, email=?, phone=?, role=?, student_no=?, nationality=?, language=?, status=? WHERE id=?',
+      [name, email, phone, role, student_no, nationality, language, status, req.params.id]
+    );
+  }
+  ok(res);
+}));
+
+router.delete('/:id', asyncHandler(async (req, res) =&gt; {
+  await pool.execute(`UPDATE users SET status='disabled' WHERE id=?`, [req.params.id]);
+  ok(res);
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/bikes.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import { pool } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+
+const router = Router();
+
+router.get('/', auth(false), asyncHandler(async (req, res) =&gt; {
+  const { status, station_id, keyword } = req.query;
+  const where = [];
+  const args = [];
+  if (status) { where.push('b.status=?'); args.push(status); }
+  if (station_id) { where.push('b.station_id=?'); args.push(station_id); }
+  if (keyword) { where.push('(b.bike_no LIKE ? OR b.name LIKE ?)'); args.push(`%${keyword}%`, `%${keyword}%`); }
+  const [rows] = await pool.execute(
+    `SELECT b.*, s.name_zh station_name_zh, s.name_en station_name_en
+     FROM bikes b LEFT JOIN stations s ON s.id=b.station_id
+     ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY b.id DESC`,
+    args
+  );
+  ok(res, rows);
+}));
+
+router.get('/:id', auth(false), asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT * FROM bikes WHERE id=?', [req.params.id]);
+  ok(res, rows[0] || null);
+}));
+
+router.post('/', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  const { bike_no, name, type, status = 'available', station_id, hourly_rate = 2, image_url, description } = req.body;
+  await pool.execute(
+    'INSERT INTO bikes (bike_no,name,type,status,station_id,hourly_rate,image_url,description) VALUES (?,?,?,?,?,?,?,?)',
+    [bike_no, name, type, status, station_id, hourly_rate, image_url, description]
+  );
+  ok(res);
+}));
+
+router.put('/:id', auth(), allow('admin', 'staff'), asyncHandler(async (req, res) =&gt; {
+  const { bike_no, name, type, status, station_id, hourly_rate, image_url, description } = req.body;
+  await pool.execute(
+    'UPDATE bikes SET bike_no=?, name=?, type=?, status=?, station_id=?, hourly_rate=?, image_url=?, description=? WHERE id=?',
+    [bike_no, name, type, status, station_id, hourly_rate, image_url, description, req.params.id]
+  );
+  ok(res);
+}));
+
+router.delete('/:id', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  await pool.execute(`UPDATE bikes SET status='disabled' WHERE id=?`, [req.params.id]);
+  ok(res);
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/stations.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import { pool } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+
+const router = Router();
+
+router.get('/', auth(false), asyncHandler(async (_req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT * FROM stations ORDER BY id DESC');
+  ok(res, rows);
+}));
+
+router.get('/:id', auth(false), asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT * FROM stations WHERE id=?', [req.params.id]);
+  ok(res, rows[0] || null);
+}));
+
+router.post('/', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  const { name_zh, name_en, address_zh, address_en, latitude, longitude, capacity } = req.body;
+  await pool.execute(
+    'INSERT INTO stations (name_zh,name_en,address_zh,address_en,latitude,longitude,capacity) VALUES (?,?,?,?,?,?,?)',
+    [name_zh, name_en, address_zh, address_en, latitude, longitude, capacity]
+  );
+  ok(res);
+}));
+
+router.put('/:id', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  const { name_zh, name_en, address_zh, address_en, latitude, longitude, capacity } = req.body;
+  await pool.execute(
+    'UPDATE stations SET name_zh=?, name_en=?, address_zh=?, address_en=?, latitude=?, longitude=?, capacity=? WHERE id=?',
+    [name_zh, name_en, address_zh, address_en, latitude, longitude, capacity, req.params.id]
+  );
+  ok(res);
+}));
+
+router.delete('/:id', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  await pool.execute('DELETE FROM stations WHERE id=?', [req.params.id]);
+  ok(res);
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/orders.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import { nanoid } from 'nanoid';
+import { pool, tx } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+import { HttpError } from '../utils/errors.js';
+
+const router = Router();
+router.use(auth());
+
+router.get('/', allow('admin'), asyncHandler(async (_req, res) =&gt; {
+  const [rows] = await pool.execute(
+    `SELECT o.*, u.username, b.bike_no FROM rental_orders o
+     LEFT JOIN users u ON u.id=o.user_id LEFT JOIN bikes b ON b.id=o.bike_id
+     ORDER BY o.id DESC`
+  );
+  ok(res, rows);
+}));
+
+router.get('/my', asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT * FROM rental_orders WHERE user_id=? ORDER BY id DESC', [req.user.id]);
+  ok(res, rows);
+}));
+
+router.get('/current', asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute(`SELECT * FROM rental_orders WHERE user_id=? AND status='renting' ORDER BY id DESC LIMIT 1`, [req.user.id]);
+  ok(res, rows[0] || null);
+}));
+
+router.get('/:id', asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT * FROM rental_orders WHERE id=?', [req.params.id]);
+  const order = rows[0];
+  if (!order) return ok(res, null);
+  if (req.user.role !== 'admin' &amp;&amp; order.user_id !== req.user.id) throw new HttpError(403, 'Forbidden');
+  ok(res, order);
+}));
+
+router.post('/rent', allow('student', 'admin'), asyncHandler(async (req, res) =&gt; {
+  const { bike_id, start_station_id } = req.body;
+  const order = await tx(async (conn) =&gt; {
+    const [active] = await conn.execute(`SELECT id FROM rental_orders WHERE user_id=? AND status='renting'`, [req.user.id]);
+    if (active.length) throw new HttpError(400, 'You already have an active rental');
+    const [bikes] = await conn.execute(`SELECT * FROM bikes WHERE id=? FOR UPDATE`, [bike_id]);
+    const bike = bikes[0];
+    if (!bike || bike.status !== 'available') throw new HttpError(400, 'Bike is not available');
+    await conn.execute(`UPDATE bikes SET status='rented' WHERE id=?`, [bike_id]);
+    const orderNo = `RO${Date.now()}${nanoid(6).toUpperCase()}`;
+    await conn.execute(
+      `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,hourly_rate,status,start_station_id)
+       VALUES (?, ?, ?, NOW(), ?, 'renting', ?)`,
+      [orderNo, req.user.id, bike_id, bike.hourly_rate, start_station_id || bike.station_id]
+    );
+    const [rows] = await conn.execute('SELECT * FROM rental_orders WHERE order_no=?', [orderNo]);
+    return rows[0];
+  });
+  ok(res, order, 'rented');
+}));
+
+router.put('/:id/return', allow('student', 'admin'), asyncHandler(async (req, res) =&gt; {
+  const { end_station_id } = req.body;
+  const result = await tx(async (conn) =&gt; {
+    const [orders] = await conn.execute(`SELECT * FROM rental_orders WHERE id=? FOR UPDATE`, [req.params.id]);
+    const order = orders[0];
+    if (!order || order.status !== 'renting') throw new HttpError(400, 'Order is not active');
+    if (req.user.role !== 'admin' &amp;&amp; order.user_id !== req.user.id) throw new HttpError(403, 'Forbidden');
+    const minutesUsed = Math.ceil((Date.now() - new Date(order.start_time).getTime()) / 60000);
+    const hours = Math.max(1, Math.ceil(minutesUsed / 60));
+    const total = Number((hours * Number(order.hourly_rate)).toFixed(2));
+    await conn.execute(
+      `UPDATE rental_orders SET end_time=NOW(), duration_hours=?, total_amount=?, status='completed', end_station_id=? WHERE id=?`,
+      [hours, total, end_station_id || order.start_station_id, order.id]
+    );
+    await conn.execute(`UPDATE bikes SET status='available', station_id=? WHERE id=?`, [end_station_id || order.start_station_id, order.bike_id]);
+    const [rows] = await conn.execute('SELECT * FROM rental_orders WHERE id=?', [order.id]);
+    return rows[0];
+  });
+  ok(res, result, 'returned');
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/maintenance.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import { pool, tx } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+
+const router = Router();
+router.use(auth(), allow('admin', 'staff'));
+
+router.get('/', asyncHandler(async (_req, res) =&gt; {
+  const [rows] = await pool.execute(
+    `SELECT m.*, b.bike_no, u.username staff_name
+     FROM maintenance_records m
+     LEFT JOIN bikes b ON b.id=m.bike_id
+     LEFT JOIN users u ON u.id=m.staff_id
+     ORDER BY m.id DESC`
+  );
+  ok(res, rows);
+}));
+
+router.post('/', asyncHandler(async (req, res) =&gt; {
+  const { bike_id, staff_id, content } = req.body;
+  await tx(async (conn) =&gt; {
+    await conn.execute(
+      `INSERT INTO maintenance_records (bike_id, staff_id, content, status, start_time)
+       VALUES (?, ?, ?, 'processing', NOW())`,
+      [bike_id, staff_id || req.user.id, content]
+    );
+    await conn.execute(`UPDATE bikes SET status='maintenance' WHERE id=?`, [bike_id]);
+  });
+  ok(res);
+}));
+
+router.put('/:id/finish', asyncHandler(async (req, res) =&gt; {
+  await tx(async (conn) =&gt; {
+    const [records] = await conn.execute('SELECT * FROM maintenance_records WHERE id=? FOR UPDATE', [req.params.id]);
+    const record = records[0];
+    await conn.execute(`UPDATE maintenance_records SET status='finished', end_time=NOW() WHERE id=?`, [req.params.id]);
+    if (record) await conn.execute(`UPDATE bikes SET status='available' WHERE id=?`, [record.bike_id]);
+  });
+  ok(res);
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/dashboard.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import { pool } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+
+const router = Router();
+router.use(auth(), allow('admin'));
+
+router.get('/stats', asyncHandler(async (_req, res) =&gt; {
+  const [[users]] = await pool.execute('SELECT COUNT(*) count FROM users');
+  const [[bikes]] = await pool.execute('SELECT COUNT(*) count FROM bikes');
+  const [[renting]] = await pool.execute(`SELECT COUNT(*) count FROM rental_orders WHERE status='renting'`);
+  const [[income]] = await pool.execute(`SELECT COALESCE(SUM(total_amount),0) total FROM rental_orders WHERE status='completed'`);
+  ok(res, {
+    users: users.count,
+    bikes: bikes.count,
+    activeOrders: renting.count,
+    totalIncome: Number(income.total)
+  });
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/src/routes/announcements.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { Router } from 'express';
+import { pool } from '../config/db.js';
+import { auth } from '../middleware/auth.js';
+import { allow } from '../middleware/role.js';
+import { asyncHandler, ok } from '../utils/response.js';
+
+const router = Router();
+
+router.get('/', asyncHandler(async (_req, res) =&gt; {
+  const [rows] = await pool.execute(`SELECT * FROM announcements WHERE status='published' ORDER BY id DESC`);
+  ok(res, rows);
+}));
+
+router.get('/:id', asyncHandler(async (req, res) =&gt; {
+  const [rows] = await pool.execute('SELECT * FROM announcements WHERE id=?', [req.params.id]);
+  ok(res, rows[0] || null);
+}));
+
+router.post('/', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  const { title_zh, title_en, content_zh, content_en, status = 'published' } = req.body;
+  await pool.execute(
+    'INSERT INTO announcements (title_zh,title_en,content_zh,content_en,status,created_by) VALUES (?,?,?,?,?,?)',
+    [title_zh, title_en, content_zh, content_en, status, req.user.id]
+  );
+  ok(res);
+}));
+
+router.put('/:id', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  const { title_zh, title_en, content_zh, content_en, status = 'published' } = req.body;
+  await pool.execute(
+    'UPDATE announcements SET title_zh=?, title_en=?, content_zh=?, content_en=?, status=? WHERE id=?',
+    [title_zh, title_en, content_zh, content_en, status, req.params.id]
+  );
+  ok(res);
+}));
+
+router.delete('/:id', auth(), allow('admin'), asyncHandler(async (req, res) =&gt; {
+  await pool.execute(`UPDATE announcements SET status='hidden' WHERE id=?`, [req.params.id]);
+  ok(res);
+}));
+
+export default router;
+
+</code></pre>
+<h2>backend/sql/schema.sql</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-sql">CREATE DATABASE IF NOT EXISTS student_bike_rental DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE student_bike_rental;
+
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  name VARCHAR(100),
+  email VARCHAR(120),
+  phone VARCHAR(30),
+  role ENUM('student','admin','staff') NOT NULL DEFAULT 'student',
+  student_no VARCHAR(50),
+  nationality VARCHAR(80),
+  language VARCHAR(20) DEFAULT 'zh-CN',
+  status ENUM('active','disabled') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS stations (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name_zh VARCHAR(120) NOT NULL,
+  name_en VARCHAR(120) NOT NULL,
+  address_zh VARCHAR(255),
+  address_en VARCHAR(255),
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  capacity INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS bikes (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  bike_no VARCHAR(60) NOT NULL UNIQUE,
+  name VARCHAR(120),
+  type VARCHAR(60),
+  status ENUM('available','rented','maintenance','disabled') NOT NULL DEFAULT 'available',
+  station_id BIGINT,
+  hourly_rate DECIMAL(10,2) NOT NULL DEFAULT 2.00,
+  image_url VARCHAR(500),
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_bikes_station FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS rental_orders (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_no VARCHAR(80) NOT NULL UNIQUE,
+  user_id BIGINT NOT NULL,
+  bike_id BIGINT NOT NULL,
+  start_time DATETIME NOT NULL,
+  end_time DATETIME,
+  duration_hours INT,
+  hourly_rate DECIMAL(10,2) NOT NULL DEFAULT 2.00,
+  total_amount DECIMAL(10,2) DEFAULT 0,
+  status ENUM('renting','completed','cancelled') NOT NULL DEFAULT 'renting',
+  start_station_id BIGINT,
+  end_station_id BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id),
+  CONSTRAINT fk_orders_bike FOREIGN KEY (bike_id) REFERENCES bikes(id),
+  INDEX idx_orders_user_status (user_id, status)
+);
+
+CREATE TABLE IF NOT EXISTS maintenance_records (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  bike_id BIGINT NOT NULL,
+  staff_id BIGINT,
+  content TEXT NOT NULL,
+  status ENUM('processing','finished') NOT NULL DEFAULT 'processing',
+  start_time DATETIME,
+  end_time DATETIME,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_maintenance_bike FOREIGN KEY (bike_id) REFERENCES bikes(id),
+  CONSTRAINT fk_maintenance_staff FOREIGN KEY (staff_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS announcements (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title_zh VARCHAR(200) NOT NULL,
+  title_en VARCHAR(200) NOT NULL,
+  content_zh TEXT NOT NULL,
+  content_en TEXT NOT NULL,
+  status ENUM('published','hidden') NOT NULL DEFAULT 'published',
+  created_by BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_announcements_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+</code></pre>
+<h2>backend/sql/seed.sql</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-sql">USE student_bike_rental;
+
+INSERT INTO stations (name_zh, name_en, address_zh, address_en, latitude, longitude, capacity) VALUES
+('主教学楼站', 'Main Building Station', '主教学楼东门', 'East gate of Main Building', 31.2304000, 121.4737000, 40),
+('国际学生公寓站', 'International Dormitory Station', '国际学生公寓入口', 'Entrance of International Dormitory', 31.2311000, 121.4750000, 30),
+('图书馆站', 'Library Station', '图书馆南广场', 'South square of Library', 31.2298000, 121.4729000, 35)
+ON DUPLICATE KEY UPDATE name_zh=VALUES(name_zh);
+
+INSERT INTO bikes (bike_no, name, type, status, station_id, hourly_rate, image_url, description) VALUES
+('BIKE-1001', 'Campus Bike 1001', 'standard', 'available', 1, 2.00, '', 'Standard campus rental bike'),
+('BIKE-1002', 'Campus Bike 1002', 'standard', 'available', 1, 2.00, '', 'Standard campus rental bike'),
+('BIKE-2001', 'City Bike 2001', 'city', 'available', 2, 3.00, '', 'Comfort city bike'),
+('BIKE-3001', 'Maintenance Bike 3001', 'standard', 'maintenance', 3, 2.00, '', 'Bike waiting for maintenance')
+ON DUPLICATE KEY UPDATE name=VALUES(name), status=VALUES(status);
+
+INSERT INTO announcements (title_zh, title_en, content_zh, content_en, status, created_by) VALUES
+('欢迎使用校园单车租赁系统', 'Welcome to Campus Bike Rental', '请遵守校园骑行规则，按时归还车辆。', 'Please follow campus riding rules and return bikes on time.', 'published', NULL),
+('雨天骑行提醒', 'Rainy Day Riding Notice', '雨天路滑，请降低车速并注意安全。', 'Roads may be slippery on rainy days. Please slow down and ride safely.', 'published', NULL);
+
+-- 初始化用户请运行：npm run seed
+-- admin/***, student/***, staff/*** 会以 bcrypt hash 写入。
+
+</code></pre>
+<h2>backend/src/utils/initDb.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(__dirname, '../..');
+
+const connection = await mysql.createConnection({
+  host: process.env.DB_HOST || '***',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '***',
+  multipleStatements: true
+});
+
+for (const file of ['schema.sql', 'seed.sql']) {
+  const sql = await fs.readFile(path.join(root, 'sql', file), 'utf8');
+  await connection.query(sql);
+  console.log(`Executed ${file}`);
+}
+
+await connection.end();
+console.log('Database initialized.');
+
+</code></pre>
+<h2>backend/src/utils/seedDemoData.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import bcrypt from 'bcryptjs';
+import { pool, tx } from '../config/db.js';
+
+const demoUsers = [
+  ['admin', '***', '系统管理员', 'admin', '***', '***', null, 'China'],
+  ['student', '***', '张同学', 'student', '***', '***', 'S20260001', 'China'],
+  ['staff', '***', '维修人员', 'staff', '***', '***', null, 'China'],
+  ['lihua', '***', '李华', 'student', '***', '***', 'S20260002', 'China'],
+  ['emma', '***', 'Emma Smith', 'student', '***', '***', 'S20260003', 'United Kingdom'],
+  ['akiko', '***', 'Akiko Tanaka', 'student', '***', '***', 'S20260004', 'Japan']
+];
+
+const stations = [
+  ['主教学楼站', 'Main Building Station', '主教学楼东门', 'East gate of Main Building', 31.2304, 121.4737, 40],
+  ['国际学生公寓站', 'International Dormitory Station', '国际学生公寓入口', 'Entrance of International Dormitory', 31.2311, 121.4750, 30],
+  ['图书馆站', 'Library Station', '图书馆南广场', 'South square of Library', 31.2298, 121.4729, 35],
+  ['体育馆站', 'Gymnasium Station', '体育馆北侧', 'North side of Gymnasium', 31.2287, 121.4718, 26],
+  ['实验楼站', 'Laboratory Building Station', '实验楼西门', 'West gate of Laboratory Building', 31.2320, 121.4762, 22]
+];
+
+const bikes = [
+  ['BIKE-1001', 'Campus Bike 1001', 'standard', 'available', 1, 2, '标准校园单车'],
+  ['BIKE-1002', 'Campus Bike 1002', 'standard', 'available', 1, 2, '标准校园单车'],
+  ['BIKE-1003', 'Campus Bike 1003', 'standard', 'available', 1, 2, '标准校园单车'],
+  ['BIKE-2001', 'City Bike 2001', 'city', 'available', 2, 3, '舒适城市通勤车'],
+  ['BIKE-2002', 'City Bike 2002', 'city', 'available', 2, 3, '舒适城市通勤车'],
+  ['BIKE-3001', 'Maintenance Bike 3001', 'standard', 'maintenance', 3, 2, '待维护车辆'],
+  ['BIKE-4001', 'Sport Bike 4001', 'sport', 'available', 4, 4, '轻量运动单车'],
+  ['BIKE-5001', 'Campus Bike 5001', 'standard', 'disabled', 5, 2, '停用测试车辆']
+];
+
+await tx(async (conn) =&gt; {
+  for (const [username, password, name, role, email, phone, studentNo, nationality] of demoUsers) {
+    const hash = await bcrypt.hash(password, 10);
+    await conn.execute(
+      `INSERT INTO users (username,password,name,email,phone,role,student_no,nationality,language,status)
+       VALUES (?,?,?,?,?,?,?,?, 'zh-CN', 'active')
+       ON DUPLICATE KEY UPDATE password=VALUES(password), name=VALUES(name), email=VALUES(email), phone=VALUES(phone),
+       role=VALUES(role), student_no=VALUES(student_no), nationality=VALUES(nationality), status='active'`,
+      [username, hash, name, email, phone, role, studentNo, nationality]
+    );
+  }
+
+  for (const station of stations) {
+    await conn.execute(
+      `INSERT INTO stations (name_zh,name_en,address_zh,address_en,latitude,longitude,capacity)
+       SELECT ?,?,?,?,?,?,?
+       WHERE NOT EXISTS (SELECT 1 FROM stations WHERE name_en=?)`,
+      [...station, station[1]]
+    );
+  }
+
+  for (const [bikeNo, name, type, status, stationId, rate, description] of bikes) {
+    await conn.execute(
+      `INSERT INTO bikes (bike_no,name,type,status,station_id,hourly_rate,image_url,description)
+       VALUES (?,?,?,?,?,?,?,?)
+       ON DUPLICATE KEY UPDATE name=VALUES(name), type=VALUES(type), status=VALUES(status), station_id=VALUES(station_id),
+       hourly_rate=VALUES(hourly_rate), description=VALUES(description)`,
+      [bikeNo, name, type, status, stationId, rate, '', description]
+    );
+  }
+
+  await conn.execute(
+    `INSERT INTO maintenance_records (bike_id, staff_id, content, status, start_time)
+     SELECT b.id, u.id, '刹车系统检查与车铃更换', 'processing', DATE_SUB(NOW(), INTERVAL 2 HOUR)
+     FROM bikes b JOIN users u ON u.username='staff'
+     WHERE b.bike_no='BIKE-3001'
+       AND NOT EXISTS (SELECT 1 FROM maintenance_records m WHERE m.bike_id=b.id AND m.status='processing')`
+  );
+
+  await conn.execute(
+    `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,end_time,duration_hours,hourly_rate,total_amount,status,start_station_id,end_station_id)
+     SELECT 'RO-DEMO-001', u.id, b.id, DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR), 2, b.hourly_rate, b.hourly_rate * 2, 'completed', 1, 2
+     FROM users u JOIN bikes b ON b.bike_no='BIKE-1002'
+     WHERE u.username='student'
+       AND NOT EXISTS (SELECT 1 FROM rental_orders WHERE order_no='RO-DEMO-001')`
+  );
+
+  await conn.execute(
+    `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,end_time,duration_hours,hourly_rate,total_amount,status,start_station_id,end_station_id)
+     SELECT 'RO-DEMO-002', u.id, b.id, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 22 HOUR), 2, b.hourly_rate, b.hourly_rate * 2, 'completed', 2, 3
+     FROM users u JOIN bikes b ON b.bike_no='BIKE-2001'
+     WHERE u.username='emma'
+       AND NOT EXISTS (SELECT 1 FROM rental_orders WHERE order_no='RO-DEMO-002')`
+  );
+
+  await conn.execute(
+    `INSERT INTO announcements (title_zh,title_en,content_zh,content_en,status,created_by)
+     SELECT '国际学生骑行安全周', 'International Student Cycling Safety Week',
+            '本周将在主教学楼站开展骑行安全宣传，请同学们合理规划用车时间。',
+            'A cycling safety campaign will be held at the Main Building Station this week. Please plan your rentals accordingly.',
+            'published', u.id
+     FROM users u
+     WHERE u.username='admin'
+       AND NOT EXISTS (SELECT 1 FROM announcements WHERE title_en='International Student Cycling Safety Week')`
+  );
+});
+
+console.log('Demo data seeded.');
+await pool.end();
+
+</code></pre>
+<h2>backend/src/utils/seedUsers.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import bcrypt from 'bcryptjs';
+import { pool } from '../config/db.js';
+
+const users = [
+  ['admin', '***', 'System Admin', 'admin'],
+  ['student', '***', 'Demo Student', 'student'],
+  ['staff', '***', 'Maintenance Staff', 'staff']
+];
+
+for (const [username, password, name, role] of users) {
+  const hash = await bcrypt.hash(password, 10);
+  await pool.execute(
+    `INSERT INTO users (username,password,name,role,status,language)
+     VALUES (?,?,?,?, 'active', 'zh-CN')
+     ON DUPLICATE KEY UPDATE password=VALUES(password), name=VALUES(name), role=VALUES(role), status='active'`,
+    [username, hash, name, role]
+  );
+}
+
+console.log('Seed users completed.');
+await pool.end();
+
+</code></pre>
+<h2>backend/src/utils/response.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">export function ok(res, data = null, message = 'success') {
+  return res.json({ code: 200, message, data });
+}
+
+export function fail(res, status = 400, message = 'error') {
+  return res.status(status).json({ code: status, message });
+}
+
+export function asyncHandler(fn) {
+  return (req, res, next) =&gt; Promise.resolve(fn(req, res, next)).catch(next);
+}
+
+</code></pre>
+<h2>backend/src/utils/errors.js</h2>
+<p>文件职责：该文件属于 后端服务模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">export class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+</code></pre>
+<h2>frontend/package.json</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;student-bike-rental-frontend&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;scripts&quot;: {
+    &quot;dev&quot;: &quot;vite --host 0.0.0.0&quot;,
+    &quot;build&quot;: &quot;vite build&quot;,
+    &quot;preview&quot;: &quot;vite preview --host 0.0.0.0&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;@vitejs/plugin-vue&quot;: &quot;^5.2.1&quot;,
+    &quot;vite&quot;: &quot;^6.0.3&quot;,
+    &quot;vue&quot;: &quot;^3.5.13&quot;,
+    &quot;vue-router&quot;: &quot;^4.5.0&quot;
+  },
+  &quot;devDependencies&quot;: {}
+}
+
+</code></pre>
+<h2>frontend/vite.config.js</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://***',
+        changeOrigin: true
+      }
+    }
+  }
+});
+
+</code></pre>
+<h2>frontend/index.html</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;Student Bike Rental&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;&lt;/div&gt;
+    &lt;script type=&quot;module&quot; src=&quot;/src/main.js&quot;&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+
+</code></pre>
+<h2>frontend/src/main.js</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router/index.js';
+import './assets/style.css';
+
+createApp(App).use(router).mount('#app');
+
+</code></pre>
+<h2>frontend/src/App.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;div class=&quot;app-shell&quot;&gt;
+    &lt;header class=&quot;topbar&quot;&gt;
+      &lt;router-link class=&quot;brand&quot; to=&quot;/&quot;&gt;{{ t('app') }}&lt;/router-link&gt;
+      &lt;nav class=&quot;toolbar&quot;&gt;
+        &lt;router-link to=&quot;/&quot;&gt;{{ t('home') }}&lt;/router-link&gt;
+        &lt;router-link v-if=&quot;auth.user&quot; to=&quot;/bikes&quot;&gt;{{ t('bikes') }}&lt;/router-link&gt;
+        &lt;router-link v-if=&quot;auth.user&quot; to=&quot;/orders/current&quot;&gt;{{ t('currentOrder') }}&lt;/router-link&gt;
+        &lt;router-link v-if=&quot;auth.user&quot; to=&quot;/orders/history&quot;&gt;{{ t('history') }}&lt;/router-link&gt;
+        &lt;router-link to=&quot;/announcements&quot;&gt;{{ t('announcements') }}&lt;/router-link&gt;
+        &lt;router-link v-if=&quot;auth.user&quot; to=&quot;/profile&quot;&gt;{{ t('profile') }}&lt;/router-link&gt;
+        &lt;router-link v-if=&quot;auth.user?.role === 'admin'&quot; to=&quot;/admin&quot;&gt;{{ t('dashboard') }}&lt;/router-link&gt;
+        &lt;router-link v-if=&quot;!auth.user&quot; to=&quot;/login&quot;&gt;{{ t('login') }}&lt;/router-link&gt;
+        &lt;button v-if=&quot;auth.user&quot; @click=&quot;logout&quot;&gt;{{ t('logout') }}&lt;/button&gt;
+        &lt;select :value=&quot;state.lang&quot; @change=&quot;setLang($event.target.value)&quot;&gt;
+          &lt;option value=&quot;zh-CN&quot;&gt;中文&lt;/option&gt;
+          &lt;option value=&quot;en-US&quot;&gt;English&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/nav&gt;
+    &lt;/header&gt;
+    &lt;main class=&quot;content&quot;&gt;
+      &lt;router-view /&gt;
+    &lt;/main&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import { useRouter } from 'vue-router';
+import { authStore as auth } from './stores/auth.js';
+import { state, t, setLang } from './i18n/index.js';
+
+const router = useRouter();
+function logout() {
+  auth.logout();
+  router.push('/login');
+}
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/router/index.js</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { createRouter, createWebHistory } from 'vue-router';
+import { authStore } from '../stores/auth.js';
+import Login from '../views/Login.vue';
+import Register from '../views/Register.vue';
+import Home from '../views/Home.vue';
+import Bikes from '../views/Bikes.vue';
+import BikeDetail from '../views/BikeDetail.vue';
+import RentConfirm from '../views/RentConfirm.vue';
+import CurrentOrder from '../views/CurrentOrder.vue';
+import Orders from '../views/Orders.vue';
+import Profile from '../views/Profile.vue';
+import Announcements from '../views/Announcements.vue';
+import AnnouncementDetail from '../views/AnnouncementDetail.vue';
+import AdminList from '../views/AdminList.vue';
+import Dashboard from '../views/Dashboard.vue';
+
+const routes = [
+  { path: '/', component: Home },
+  { path: '/login', component: Login },
+  { path: '/register', component: Register },
+  { path: '/bikes', component: Bikes, meta: { auth: true } },
+  { path: '/bikes/:id', component: BikeDetail, meta: { auth: true } },
+  { path: '/rent/:id', component: RentConfirm, meta: { auth: true } },
+  { path: '/orders/current', component: CurrentOrder, meta: { auth: true } },
+  { path: '/orders/history', component: Orders, meta: { auth: true } },
+  { path: '/profile', component: Profile, meta: { auth: true } },
+  { path: '/announcements', component: Announcements },
+  { path: '/announcements/:id', component: AnnouncementDetail },
+  { path: '/admin', component: Dashboard, meta: { auth: true, admin: true } },
+  { path: '/admin/users', component: AdminList, props: { type: 'users' }, meta: { auth: true, admin: true } },
+  { path: '/admin/bikes', component: AdminList, props: { type: 'bikes' }, meta: { auth: true, admin: true } },
+  { path: '/admin/orders', component: AdminList, props: { type: 'orders' }, meta: { auth: true, admin: true } },
+  { path: '/admin/stations', component: AdminList, props: { type: 'stations' }, meta: { auth: true, admin: true } },
+  { path: '/admin/maintenance', component: AdminList, props: { type: 'maintenance' }, meta: { auth: true } },
+  { path: '/admin/announcements', component: AdminList, props: { type: 'announcements' }, meta: { auth: true, admin: true } }
+];
+
+const router = createRouter({ history: createWebHistory(), routes });
+
+router.beforeEach((to) =&gt; {
+  if (to.meta.auth &amp;&amp; !authStore.isAuthed) return '/login';
+  if (to.meta.admin &amp;&amp; authStore.user?.role !== 'admin') return '/';
+  return true;
+});
+
+export default router;
+
+</code></pre>
+<h2>frontend/src/api/client.js</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">const API_BASE = import.meta.env.VITE_API_BASE || 'http://***/api';
+
+export function token() {
+  return localStorage.getItem('token') || '';
+}
+
+export async function request(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token()) headers.Authorization = `Bearer ${token()}`;
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  const payload = await response.json().catch(() =&gt; ({ message: 'Network error' }));
+  if (!response.ok || payload.code &gt;= 400) throw new Error(payload.message || 'Request failed');
+  return payload.data;
+}
+
+</code></pre>
+<h2>frontend/src/i18n/index.js</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { reactive } from 'vue';
+
+export const state = reactive({
+  lang: localStorage.getItem('lang') || 'zh-CN'
+});
+
+const messages = {
+  'zh-CN': {
+    app: '国际化学生单车租赁',
+    login: '登录',
+    register: '注册',
+    logout: '退出',
+    home: '首页',
+    bikes: '单车',
+    currentOrder: '当前订单',
+    history: '历史订单',
+    profile: '个人中心',
+    announcements: '公告',
+    dashboard: '后台',
+    users: '用户',
+    orders: '订单',
+    stations: '站点',
+    maintenance: '维护',
+    rent: '租赁',
+    returnBike: '归还',
+    save: '保存',
+    search: '搜索',
+    username: '用户名',
+    password: '密码',
+    name: '姓名',
+    email: '邮箱',
+    phone: '电话',
+    status: '状态',
+    available: '可租赁',
+    rented: '已租赁',
+    disabled: '停用',
+    maintenanceStatus: '维护中',
+    language: '语言',
+    detail: '详情',
+    all: '全部',
+    create: '新增',
+    action: '操作',
+    finish: '完成',
+    delete: '删除',
+    noActiveOrder: '暂无当前订单',
+    confirmReturn: '确认归还？',
+    completedTotal: '已完成，费用：',
+    bike: '车辆',
+    id: '编号',
+    bike_no: '车辆编号',
+    order_no: '订单编号',
+    role: '角色',
+    type: '类型',
+    hourly_rate: '小时费率',
+    total_amount: '总费用',
+    capacity: '容量',
+    name_zh: '中文名称',
+    name_en: '英文名称',
+    staff_name: '维护人员',
+    content: '内容',
+    title_zh: '中文标题',
+    title_en: '英文标题'
+  },
+  'en-US': {
+    app: 'International Student Bike Rental',
+    login: 'Login',
+    register: 'Register',
+    logout: 'Logout',
+    home: 'Home',
+    bikes: 'Bikes',
+    currentOrder: 'Current',
+    history: 'History',
+    profile: 'Profile',
+    announcements: 'Announcements',
+    dashboard: 'Admin',
+    users: 'Users',
+    orders: 'Orders',
+    stations: 'Stations',
+    maintenance: 'Maintenance',
+    rent: 'Rent',
+    returnBike: 'Return',
+    save: 'Save',
+    search: 'Search',
+    username: 'Username',
+    password: 'Password',
+    name: 'Name',
+    email: 'Email',
+    phone: 'Phone',
+    status: 'Status',
+    available: 'Available',
+    rented: 'Rented',
+    disabled: 'Disabled',
+    maintenanceStatus: 'Maintenance',
+    language: 'Language',
+    detail: 'Detail',
+    all: 'All',
+    create: 'Create',
+    action: 'Action',
+    finish: 'Finish',
+    delete: 'Delete',
+    noActiveOrder: 'No active order',
+    confirmReturn: 'Confirm return?',
+    completedTotal: 'Completed. Total: ',
+    bike: 'Bike',
+    id: 'ID',
+    bike_no: 'Bike No.',
+    order_no: 'Order No.',
+    role: 'Role',
+    type: 'Type',
+    hourly_rate: 'Hourly Rate',
+    total_amount: 'Total Amount',
+    capacity: 'Capacity',
+    name_zh: 'Chinese Name',
+    name_en: 'English Name',
+    staff_name: 'Staff',
+    content: 'Content',
+    title_zh: 'Chinese Title',
+    title_en: 'English Title'
+  }
+};
+
+export function t(key) {
+  return messages[state.lang]?.[key] || key;
+}
+
+export function setLang(lang) {
+  state.lang = lang;
+  localStorage.setItem('lang', lang);
+}
+
+</code></pre>
+<h2>frontend/src/stores/auth.js</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-js">import { reactive } from 'vue';
+import { request } from '../api/client.js';
+
+export const authStore = reactive({
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  get isAuthed() {
+    return Boolean(localStorage.getItem('token'));
+  },
+  async login(form) {
+    const data = await request('/auth/login', { method: 'POST', body: form });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    this.user = data.user;
+  },
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    this.user = null;
+  }
+});
+
+</code></pre>
+<h2>frontend/src/views/Login.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('login') }}&lt;/h1&gt;
+    &lt;form class=&quot;form&quot; @submit.prevent=&quot;submit&quot;&gt;
+      &lt;input v-model=&quot;form.username&quot; :placeholder=&quot;t('username')&quot; required /&gt;
+      &lt;input v-model=&quot;form.password&quot; :placeholder=&quot;t('password')&quot; type=&quot;password&quot; required /&gt;
+      &lt;button class=&quot;btn&quot;&gt;{{ t('login') }}&lt;/button&gt;
+      &lt;router-link to=&quot;/register&quot;&gt;{{ t('register') }}&lt;/router-link&gt;
+      &lt;p class=&quot;muted&quot;&gt;{{ message }}&lt;/p&gt;
+    &lt;/form&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { authStore } from '../stores/auth.js';
+import { t } from '../i18n/index.js';
+const router = useRouter();
+const message = ref('');
+const form = reactive({ username: 'student', password: '***' });
+async function submit() {
+  try {
+    await authStore.login(form);
+    router.push('/');
+  } catch (e) {
+    message.value = e.message;
+  }
+}
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Register.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('register') }}&lt;/h1&gt;
+    &lt;form class=&quot;form&quot; @submit.prevent=&quot;submit&quot;&gt;
+      &lt;input v-model=&quot;form.username&quot; :placeholder=&quot;t('username')&quot; required /&gt;
+      &lt;input v-model=&quot;form.password&quot; :placeholder=&quot;t('password')&quot; type=&quot;password&quot; required /&gt;
+      &lt;input v-model=&quot;form.name&quot; :placeholder=&quot;t('name')&quot; /&gt;
+      &lt;input v-model=&quot;form.email&quot; :placeholder=&quot;t('email')&quot; /&gt;
+      &lt;input v-model=&quot;form.phone&quot; :placeholder=&quot;t('phone')&quot; /&gt;
+      &lt;input v-model=&quot;form.student_no&quot; placeholder=&quot;Student No.&quot; /&gt;
+      &lt;input v-model=&quot;form.nationality&quot; placeholder=&quot;Nationality&quot; /&gt;
+      &lt;button class=&quot;btn&quot;&gt;{{ t('register') }}&lt;/button&gt;
+      &lt;p class=&quot;muted&quot;&gt;{{ message }}&lt;/p&gt;
+    &lt;/form&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { reactive, ref } from 'vue';
+import { request } from '../api/client.js';
+import { t, state } from '../i18n/index.js';
+const message = ref('');
+const form = reactive({ username: '', password: '', name: '', email: '', phone: '', student_no: '', nationality: '', language: state.lang });
+async function submit() {
+  try {
+    await request('/auth/register', { method: 'POST', body: form });
+    message.value = 'registered';
+  } catch (e) {
+    message.value = e.message;
+  }
+}
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Home.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('app') }}&lt;/h1&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/bikes&quot;&gt;&lt;h3&gt;{{ t('bikes') }}&lt;/h3&gt;&lt;p class=&quot;muted&quot;&gt;Campus bikes and station availability&lt;/p&gt;&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/orders/current&quot;&gt;&lt;h3&gt;{{ t('currentOrder') }}&lt;/h3&gt;&lt;p class=&quot;muted&quot;&gt;Active rental and return action&lt;/p&gt;&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/announcements&quot;&gt;&lt;h3&gt;{{ t('announcements') }}&lt;/h3&gt;&lt;p class=&quot;muted&quot;&gt;Campus rental notices&lt;/p&gt;&lt;/router-link&gt;
+      &lt;router-link v-if=&quot;auth.user?.role === 'admin'&quot; class=&quot;card&quot; to=&quot;/admin&quot;&gt;&lt;h3&gt;{{ t('dashboard') }}&lt;/h3&gt;&lt;p class=&quot;muted&quot;&gt;Management console&lt;/p&gt;&lt;/router-link&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { t } from '../i18n/index.js';
+import { authStore as auth } from '../stores/auth.js';
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Bikes.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;h1&gt;{{ t('bikes') }}&lt;/h1&gt;
+      &lt;input v-model=&quot;keyword&quot; :placeholder=&quot;t('search')&quot; @keyup.enter=&quot;load&quot; /&gt;
+      &lt;select v-model=&quot;status&quot; @change=&quot;load&quot;&gt;
+        &lt;option value=&quot;&quot;&gt;{{ t('all') }}&lt;/option&gt;
+        &lt;option value=&quot;available&quot;&gt;{{ t('available') }}&lt;/option&gt;
+        &lt;option value=&quot;rented&quot;&gt;{{ t('rented') }}&lt;/option&gt;
+        &lt;option value=&quot;maintenance&quot;&gt;{{ t('maintenanceStatus') }}&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;button class=&quot;btn secondary&quot; @click=&quot;load&quot;&gt;{{ t('search') }}&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;article v-for=&quot;bike in bikes&quot; :key=&quot;bike.id&quot; class=&quot;card&quot;&gt;
+        &lt;h3&gt;{{ bike.name || bike.bike_no }}&lt;/h3&gt;
+        &lt;p&gt;{{ bike.bike_no }} · {{ bike.type }}&lt;/p&gt;
+        &lt;p&gt;&lt;span class=&quot;status&quot; :class=&quot;bike.status&quot;&gt;{{ t(bike.status) }}&lt;/span&gt;&lt;/p&gt;
+        &lt;p class=&quot;muted&quot;&gt;{{ bike.station_name_zh || bike.station_name_en }}&lt;/p&gt;
+        &lt;p&gt;￥{{ bike.hourly_rate }}/h&lt;/p&gt;
+        &lt;router-link class=&quot;btn&quot; :to=&quot;`/bikes/${bike.id}`&quot;&gt;{{ t('detail') }}&lt;/router-link&gt;
+      &lt;/article&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const bikes = ref([]);
+const keyword = ref('');
+const status = ref('');
+async function load() {
+  const params = new URLSearchParams();
+  if (keyword.value) params.set('keyword', keyword.value);
+  if (status.value) params.set('status', status.value);
+  bikes.value = await request(`/bikes?${params}`);
+}
+onMounted(load);
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/BikeDetail.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section v-if=&quot;bike&quot;&gt;
+    &lt;h1&gt;{{ bike.name || bike.bike_no }}&lt;/h1&gt;
+    &lt;div class=&quot;card&quot;&gt;
+      &lt;p&gt;{{ bike.bike_no }} · {{ bike.type }}&lt;/p&gt;
+      &lt;p&gt;&lt;span class=&quot;status&quot; :class=&quot;bike.status&quot;&gt;{{ t(bike.status) }}&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;￥{{ bike.hourly_rate }}/h&lt;/p&gt;
+      &lt;p class=&quot;muted&quot;&gt;{{ bike.description }}&lt;/p&gt;
+      &lt;router-link v-if=&quot;bike.status === 'available'&quot; class=&quot;btn&quot; :to=&quot;`/rent/${bike.id}`&quot;&gt;{{ t('rent') }}&lt;/router-link&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const route = useRoute();
+const bike = ref(null);
+onMounted(async () =&gt; { bike.value = await request(`/bikes/${route.params.id}`); });
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/RentConfirm.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('rent') }}&lt;/h1&gt;
+    &lt;div class=&quot;card&quot; v-if=&quot;bike&quot;&gt;
+      &lt;h3&gt;{{ bike.name || bike.bike_no }}&lt;/h3&gt;
+      &lt;p&gt;￥{{ bike.hourly_rate }}/h&lt;/p&gt;
+      &lt;button class=&quot;btn&quot; @click=&quot;rent&quot;&gt;{{ t('rent') }}&lt;/button&gt;
+      &lt;p class=&quot;muted&quot;&gt;{{ message }}&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const route = useRoute();
+const router = useRouter();
+const bike = ref(null);
+const message = ref('');
+onMounted(async () =&gt; { bike.value = await request(`/bikes/${route.params.id}`); });
+async function rent() {
+  if (!confirm('Confirm rental?')) return;
+  try {
+    await request('/orders/rent', { method: 'POST', body: { bike_id: Number(route.params.id), start_station_id: bike.value.station_id } });
+    router.push('/orders/current');
+  } catch (e) {
+    message.value = e.message;
+  }
+}
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/CurrentOrder.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('currentOrder') }}&lt;/h1&gt;
+    &lt;div class=&quot;card&quot; v-if=&quot;order&quot;&gt;
+      &lt;h3&gt;{{ order.order_no }}&lt;/h3&gt;
+      &lt;p&gt;{{ t('bike') }} #{{ order.bike_id }}&lt;/p&gt;
+      &lt;p&gt;{{ order.start_time }}&lt;/p&gt;
+      &lt;p&gt;&lt;span class=&quot;status&quot; :class=&quot;order.status&quot;&gt;{{ order.status }}&lt;/span&gt;&lt;/p&gt;
+      &lt;button class=&quot;btn danger&quot; @click=&quot;returnBike&quot;&gt;{{ t('returnBike') }}&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;p v-else class=&quot;muted&quot;&gt;{{ t('noActiveOrder') }}&lt;/p&gt;
+    &lt;p class=&quot;muted&quot;&gt;{{ message }}&lt;/p&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const order = ref(null);
+const message = ref('');
+async function load() { order.value = await request('/orders/current'); }
+async function returnBike() {
+  if (!confirm(t('confirmReturn'))) return;
+  try {
+    const returned = await request(`/orders/${order.value.id}/return`, { method: 'PUT', body: { end_station_id: order.value.start_station_id } });
+    order.value = null;
+    message.value = `${t('completedTotal')}￥${returned.total_amount}`;
+  } catch (e) { message.value = e.message; }
+}
+onMounted(load);
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Orders.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('history') }}&lt;/h1&gt;
+    &lt;div class=&quot;card&quot; style=&quot;overflow:auto&quot;&gt;
+      &lt;table&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;No.&lt;/th&gt;&lt;th&gt;Bike&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Hours&lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody&gt;&lt;tr v-for=&quot;o in orders&quot; :key=&quot;o.id&quot;&gt;&lt;td&gt;{{ o.order_no }}&lt;/td&gt;&lt;td&gt;{{ o.bike_id }}&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot; :class=&quot;o.status&quot;&gt;{{ o.status }}&lt;/span&gt;&lt;/td&gt;&lt;td&gt;{{ o.duration_hours || '-' }}&lt;/td&gt;&lt;td&gt;￥{{ o.total_amount }}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const orders = ref([]);
+onMounted(async () =&gt; { orders.value = await request('/orders/my'); });
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Profile.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('profile') }}&lt;/h1&gt;
+    &lt;form class=&quot;form&quot; @submit.prevent=&quot;save&quot;&gt;
+      &lt;input v-model=&quot;form.name&quot; :placeholder=&quot;t('name')&quot; /&gt;
+      &lt;input v-model=&quot;form.email&quot; :placeholder=&quot;t('email')&quot; /&gt;
+      &lt;input v-model=&quot;form.phone&quot; :placeholder=&quot;t('phone')&quot; /&gt;
+      &lt;input v-model=&quot;form.nationality&quot; placeholder=&quot;Nationality&quot; /&gt;
+      &lt;select v-model=&quot;form.language&quot;&gt;&lt;option value=&quot;zh-CN&quot;&gt;中文&lt;/option&gt;&lt;option value=&quot;en-US&quot;&gt;English&lt;/option&gt;&lt;/select&gt;
+      &lt;button class=&quot;btn&quot;&gt;{{ t('save') }}&lt;/button&gt;
+      &lt;p class=&quot;muted&quot;&gt;{{ message }}&lt;/p&gt;
+    &lt;/form&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, reactive, ref } from 'vue';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const message = ref('');
+const form = reactive({ name: '', email: '', phone: '', nationality: '', language: 'zh-CN' });
+onMounted(async () =&gt; Object.assign(form, await request('/auth/profile')));
+async function save() {
+  await request('/auth/profile', { method: 'PUT', body: form });
+  message.value = 'saved';
+}
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Announcements.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('announcements') }}&lt;/h1&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;router-link v-for=&quot;a in list&quot; :key=&quot;a.id&quot; class=&quot;card&quot; :to=&quot;`/announcements/${a.id}`&quot;&gt;
+        &lt;h3&gt;{{ state.lang === 'zh-CN' ? a.title_zh : a.title_en }}&lt;/h3&gt;
+        &lt;p class=&quot;muted&quot;&gt;{{ a.created_at }}&lt;/p&gt;
+      &lt;/router-link&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { request } from '../api/client.js';
+import { state, t } from '../i18n/index.js';
+const list = ref([]);
+onMounted(async () =&gt; { list.value = await request('/announcements'); });
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/AnnouncementDetail.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section v-if=&quot;item&quot;&gt;
+    &lt;h1&gt;{{ state.lang === 'zh-CN' ? item.title_zh : item.title_en }}&lt;/h1&gt;
+    &lt;article class=&quot;card&quot;&gt;{{ state.lang === 'zh-CN' ? item.content_zh : item.content_en }}&lt;/article&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { request } from '../api/client.js';
+import { state } from '../i18n/index.js';
+const route = useRoute();
+const item = ref(null);
+onMounted(async () =&gt; { item.value = await request(`/announcements/${route.params.id}`); });
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/AdminList.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;h1&gt;{{ title }}&lt;/h1&gt;
+      &lt;button v-if=&quot;canCreate&quot; class=&quot;btn&quot; @click=&quot;createSample&quot;&gt;{{ t('create') }}&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;p class=&quot;muted&quot;&gt;{{ message }}&lt;/p&gt;
+    &lt;div class=&quot;card&quot; style=&quot;overflow:auto&quot;&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;&lt;th v-for=&quot;h in headers&quot; :key=&quot;h&quot;&gt;{{ t(h) }}&lt;/th&gt;&lt;th&gt;{{ t('action') }}&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr v-for=&quot;row in rows&quot; :key=&quot;row.id&quot;&gt;
+            &lt;td v-for=&quot;h in headers&quot; :key=&quot;h&quot;&gt;{{ format(row[h]) }}&lt;/td&gt;
+            &lt;td&gt;
+              &lt;button v-if=&quot;type === 'maintenance' &amp;&amp; row.status === 'processing'&quot; class=&quot;btn&quot; @click=&quot;finish(row)&quot;&gt;{{ t('finish') }}&lt;/button&gt;
+              &lt;button v-if=&quot;deletable&quot; class=&quot;btn danger&quot; @click=&quot;remove(row)&quot;&gt;{{ t('delete') }}&lt;/button&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { computed, onMounted, ref, watch } from 'vue';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+
+const props = defineProps({ type: { type: String, required: true } });
+const rows = ref([]);
+const message = ref('');
+const title = computed(() =&gt; t(props.type));
+const endpoints = {
+  users: '/users',
+  bikes: '/bikes',
+  orders: '/orders',
+  stations: '/stations',
+  maintenance: '/maintenance',
+  announcements: '/announcements'
+};
+const headerMap = {
+  users: ['id', 'username', 'name', 'role', 'status'],
+  bikes: ['id', 'bike_no', 'name', 'type', 'status', 'hourly_rate'],
+  orders: ['id', 'order_no', 'username', 'bike_no', 'status', 'total_amount'],
+  stations: ['id', 'name_zh', 'name_en', 'capacity'],
+  maintenance: ['id', 'bike_no', 'staff_name', 'status', 'content'],
+  announcements: ['id', 'title_zh', 'title_en', 'status']
+};
+const headers = computed(() =&gt; headerMap[props.type] || ['id']);
+const deletable = computed(() =&gt; ['users', 'bikes', 'stations', 'announcements'].includes(props.type));
+const canCreate = computed(() =&gt; ['bikes', 'stations', 'maintenance', 'announcements'].includes(props.type));
+
+async function load() {
+  rows.value = await request(endpoints[props.type]);
+}
+function format(value) {
+  if (value == null) return '';
+  if (typeof value === 'string' &amp;&amp; value.length &gt; 60) return `${value.slice(0, 60)}...`;
+  return value;
+}
+async function remove(row) {
+  if (!confirm('Delete this item?')) return;
+  await request(`${endpoints[props.type]}/${row.id}`, { method: 'DELETE' });
+  await load();
+}
+async function finish(row) {
+  await request(`/maintenance/${row.id}/finish`, { method: 'PUT' });
+  await load();
+}
+async function createSample() {
+  const samples = {
+    bikes: { bike_no: `BIKE-${Date.now()}`, name: 'New Bike', type: 'standard', status: 'available', station_id: 1, hourly_rate: 2, image_url: '', description: 'Created from admin' },
+    stations: { name_zh: '新站点', name_en: 'New Station', address_zh: '校园内', address_en: 'Campus', latitude: 31.23, longitude: 121.47, capacity: 20 },
+    maintenance: { bike_id: 1, content: 'Routine inspection' },
+    announcements: { title_zh: '新公告', title_en: 'New Notice', content_zh: '公告内容', content_en: 'Notice content', status: 'published' }
+  };
+  try {
+    await request(endpoints[props.type], { method: 'POST', body: samples[props.type] });
+    await load();
+  } catch (e) {
+    message.value = e.message;
+  }
+}
+onMounted(load);
+watch(() =&gt; props.type, load);
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/views/Dashboard.vue</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;section&gt;
+    &lt;h1&gt;{{ t('dashboard') }}&lt;/h1&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;h3&gt;{{ stats.users }}&lt;/h3&gt;&lt;p&gt;{{ t('users') }}&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;h3&gt;{{ stats.bikes }}&lt;/h3&gt;&lt;p&gt;{{ t('bikes') }}&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;h3&gt;{{ stats.activeOrders }}&lt;/h3&gt;&lt;p&gt;{{ t('currentOrder') }}&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;h3&gt;￥{{ stats.totalIncome }}&lt;/h3&gt;&lt;p&gt;Total income&lt;/p&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;grid&quot; style=&quot;margin-top:12px&quot;&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/admin/users&quot;&gt;{{ t('users') }}&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/admin/bikes&quot;&gt;{{ t('bikes') }}&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/admin/orders&quot;&gt;{{ t('orders') }}&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/admin/stations&quot;&gt;{{ t('stations') }}&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/admin/maintenance&quot;&gt;{{ t('maintenance') }}&lt;/router-link&gt;
+      &lt;router-link class=&quot;card&quot; to=&quot;/admin/announcements&quot;&gt;{{ t('announcements') }}&lt;/router-link&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { onMounted, reactive } from 'vue';
+import { request } from '../api/client.js';
+import { t } from '../i18n/index.js';
+const stats = reactive({ users: 0, bikes: 0, activeOrders: 0, totalIncome: 0 });
+onMounted(async () =&gt; Object.assign(stats, await request('/dashboard/stats')));
+&lt;/script&gt;
+
+</code></pre>
+<h2>frontend/src/assets/style.css</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-css">* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, &quot;Microsoft YaHei&quot;, sans-serif; background: #f6f7f9; color: #172033; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+.app-shell { max-width: 980px; min-height: 100vh; margin: 0 auto; background: #fff; }
+.topbar { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 12px 14px; background: #10233f; color: #fff; }
+.brand { font-weight: 700; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar a, .toolbar button, .toolbar select { border: 0; border-radius: 6px; padding: 8px 10px; background: rgba(255,255,255,.12); color: #fff; }
+.toolbar select option { color: #172033; }
+.content { padding: 16px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.card { border: 1px solid #e4e8ef; border-radius: 8px; padding: 14px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.form { display: grid; gap: 12px; max-width: 480px; }
+.form input, .form select, .form textarea { width: 100%; border: 1px solid #ccd4df; border-radius: 6px; padding: 10px; }
+.btn { border: 0; border-radius: 6px; padding: 10px 12px; background: #0d6efd; color: #fff; cursor: pointer; }
+.btn.secondary { background: #5c667a; }
+.btn.danger { background: #c0392b; }
+.muted { color: #687386; }
+.status { display: inline-block; border-radius: 999px; padding: 3px 8px; font-size: 12px; background: #e9edf3; }
+.status.available, .status.completed, .status.published { background: #dff5e8; color: #126b35; }
+.status.rented, .status.renting, .status.processing { background: #fff3cd; color: #7b5800; }
+.status.maintenance, .status.disabled, .status.hidden { background: #fde2e2; color: #9b1c1c; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { border-bottom: 1px solid #e7ebf0; padding: 10px; text-align: left; vertical-align: top; }
+@media (max-width: 680px) {
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .toolbar a, .toolbar button, .toolbar select { padding: 7px 8px; font-size: 13px; }
+  th, td { padding: 8px 6px; font-size: 12px; }
+}
+
+</code></pre>
+<h2>README.md</h2>
+<p>文件职责：该文件属于 前端 H5 模块，用于支撑系统认证、业务接口、页面交互或数据结构。</p>
+<pre><code class="language-md"># 国际化学生单车租赁软件
+
+这是一个 Node.js + Express + MySQL 后端、Vue3 + Vite H5 前端的校园学生单车租赁系统。系统支持学生租车还车、订单查询、公告浏览、中英文切换，以及管理员后台管理用户、单车、订单、站点、维护和公告。
+
+## 目录结构
+
+```text
+backend/   Node.js REST API
+frontend/  Vue3 H5 前端
+tmp/       本次生成需求临时稿
+</code></pre>
+<h2>数据库配置</h2>
+<p>后端默认读取 <code>backend/.env</code>：</p>
+<pre><code class="language-env">DB_HOST=***
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=***
+DB_NAME=student_bike_rental
+</code></pre>
+<h2>初始化数据库</h2>
+<pre><code class="language-bash">mysql -h *** -P 3306 -u root -p &lt; backend/sql/schema.sql
+mysql -h *** -P 3306 -u root -p student_bike_rental &lt; backend/sql/seed.sql
+</code></pre>
+<p>初始化测试账号需要用 bcrypt 写入，请在安装后端依赖后运行：</p>
+<pre><code class="language-bash">cd backend
+npm install
+npm run seed
+</code></pre>
+<p>测试账号：</p>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>用户名</th>
+<th>密码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>管理员</td>
+<td>admin</td>
+<td>***</td>
+</tr>
+<tr>
+<td>学生</td>
+<td>student</td>
+<td>***</td>
+</tr>
+<tr>
+<td>运维</td>
+<td>staff</td>
+<td>***</td>
+</tr>
+</tbody>
+</table>
+<h2>启动后端</h2>
+<pre><code class="language-bash">cd backend
+npm run dev
+</code></pre>
+<p>默认地址：<code>http://***</code>。</p>
+<h2>启动前端</h2>
+<pre><code class="language-bash">cd frontend
+npm install
+npm run dev
+</code></pre>
+<p>默认地址：<code>http://***</code>。</p>
+<h2>主要接口</h2>
+<ul>
+<li><code>POST /api/auth/register</code></li>
+<li><code>POST /api/auth/login</code></li>
+<li><code>GET /api/auth/profile</code></li>
+<li><code>GET /api/bikes</code></li>
+<li><code>POST /api/orders/rent</code></li>
+<li><code>PUT /api/orders/:id/return</code></li>
+<li><code>GET /api/dashboard/stats</code></li>
+</ul>
+<p>接口统一返回：</p>
+<pre><code class="language-json">{
+  &quot;code&quot;: 200,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {}
+}
+</code></pre>
+<h2>已实现页面</h2>
+<ul>
+<li>登录页、注册页、首页</li>
+<li>单车列表、单车详情、租赁确认</li>
+<li>当前订单、历史订单、个人中心</li>
+<li>公告列表、公告详情</li>
+<li>管理后台、用户管理、单车管理、订单管理、站点管理、维护管理、公告管理</li>
+</ul>
+<h2>说明</h2>
+<ul>
+<li>租车和还车接口使用数据库事务。</li>
+<li>密码使用 bcryptjs 加密。</li>
+<li>登录使用 JWT。</li>
+<li>前端语言选择保存在 <code>localStorage.lang</code>。</li>
+<li>管理后台中的新增按钮使用演示数据快速创建记录，后续可以扩展为完整弹窗表单。</li>
+</ul>
+<p>```</p>
+</body>
+</html>

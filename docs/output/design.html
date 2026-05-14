@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>国际化学生单车租赁管理软件 V1.0 软件设计说明书</title>
+<style>
+@page { size: A4; margin: 18mm 15mm 24mm 15mm; }
+body { font-family: "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; color: #111827; line-height: 1.62; font-size: 13px; }
+h1 { text-align: center; font-size: 24px; margin: 16px 0 22px; }
+h2 { font-size: 18px; margin-top: 22px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+h3 { font-size: 15px; margin-top: 18px; }
+pre { white-space: pre-wrap; word-break: break-word; background: #f8fafc; border: 1px solid #e5e7eb; padding: 8px; font-size: 10px; line-height: 1.35; }
+code { font-family: "Noto Sans Mono CJK SC", Consolas, monospace; }
+img { display: block; max-width: 94%; max-height: 185mm; margin: 10px auto 6px; object-fit: contain; }
+.caption { text-align: center; font-size: 12px; color: #374151; margin: 0 0 8px; }
+strong { font-weight: 700; }
+.shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; margin: 8px 0 4px; break-inside: avoid; }
+.shot-pair img { width: 100%; max-width: 100%; max-height: 118mm; margin: 0 auto 4px; }
+.shot-label { text-align: center; font-size: 11px; color: #374151; margin-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; border-top: 1.5px solid #111827; border-bottom: 1.5px solid #111827; }
+th { border-bottom: 1px solid #111827; }
+td, th { padding: 6px 8px; text-align: left; }
+p { margin: 7px 0; text-align: justify; }
+</style>
+</head>
+<body>
+<h1>国际化学生单车租赁管理软件软件设计说明书</h1>
+<h2>1 引言</h2>
+<p>国际化学生单车租赁管理软件V1.0 是面向高校学生、留学生、管理员和运维人员的校园单车租赁管理软件。系统采用 H5 前端、Node.js 后端和 MySQL 数据库，围绕车辆查询、租赁、归还、订单、维护、公告、后台统计和中英文国际化形成完整业务链路。本文用于说明软件需求、模块结构、总体设计、详细设计、数据库设计、接口设计、运行部署、安全控制和测试验证情况。</p>
+<h2>2 用户需求分析</h2>
+<h3>2.1 角色需求</h3>
+<ol>
+<li>学生用户需求：学生需要通过 H5 页面完成注册登录、查看车辆、筛选可租车辆、查看车辆详情、发起租赁、归还结算、查看当前订单、查看历史订单、维护个人资料、浏览公告以及切换中文和英文界面。</li>
+<li>管理员需求：管理员需要通过后台查看业务统计，维护用户、车辆、站点、订单、维护记录和公告数据，掌握车辆投放、租赁状态、收入统计和公告发布情况。</li>
+<li>运维人员需求：运维人员需要查看维护记录、登记维护内容、将故障车辆置为维护中，并在维护完成后恢复车辆可租赁状态。</li>
+</ol>
+<h3>2.2 功能需求清单与图示对应</h3>
+<ol>
+<li>用户认证需求：对应登录页、注册页、JWT 鉴权中间件、users 表和图2-1系统用例图。</li>
+<li>单车查询需求：对应单车列表页、单车详情页、/api/bikes 接口、bikes 表和图8-2双语单车列表截图。</li>
+<li>租车还车需求：对应租赁确认页、当前订单页、/api/orders/rent、/api/orders/:id/return、rental_orders 表、图5-1时序图和图5-2状态图。</li>
+<li>订单查询需求：对应历史订单页、/api/orders/my 接口、rental_orders 表和图8-3双语订单截图。</li>
+<li>国际化需求：对应前端 i18n 资源、localStorage 语言保存、公告双语字段和第8章所有中英文对照截图。</li>
+<li>后台管理需求：对应管理员仪表盘、用户管理、单车管理、订单管理、站点管理、公告管理、维护管理和图8-5至图8-7后台截图。</li>
+<li>数据持久化需求：对应 MySQL 表结构、字段约束、外键关系、初始化脚本和图6-1数据对象关系图。</li>
+</ol>
+<p><img alt="图2-1 系统用例图" src="../assets/diagrams/01_use_case.svg" /></p>
+<div class="caption">图2-1 系统用例图</div>
+
+<p><strong>图示说明：</strong>该用例图用于把用户需求与系统功能边界对应起来。学生用户对应注册登录、语言切换、车辆查询、租赁、归还、订单和公告等需求；管理员对应后台统计、用户、车辆、站点、订单、公告和维护管理需求；运维人员对应车辆维护和状态更新需求。该图的重点是说明系统围绕三个角色组织权限，不同角色只能进入与职责匹配的功能范围。</p>
+<h3>2.3 非功能需求</h3>
+<ol>
+<li>安全需求：密码必须哈希存储，接口必须经过 JWT 鉴权，管理接口必须校验角色权限。</li>
+<li>一致性需求：租车、还车和维护状态变更必须保证订单状态和车辆状态同步。</li>
+<li>国际化需求：核心菜单、按钮、表头、状态和公告内容应支持中英文切换。</li>
+<li>可部署需求：系统应能通过 npm 安装依赖、初始化 MySQL 数据库并启动前后端服务。</li>
+</ol>
+<h2>3 系统概述</h2>
+<h3>3.1 系统定位</h3>
+<p>系统定位为校园共享单车租赁和运营管理软件。学生端服务于租赁使用，后台端服务于运营管理，运维端服务于车辆维护，数据层服务于用户、车辆、站点、订单、维护和公告的持久化管理。</p>
+<h3>3.2 系统整体模块</h3>
+<p><img alt="图3-1 系统功能模块结构图" src="../assets/diagrams/00_module_overview.svg" /></p>
+<div class="caption">图3-1 系统功能模块结构图</div>
+
+<p><strong>图示说明：</strong>该模块图用于说明系统由哪些业务模块组成。学生端 H5 包含注册登录、车辆查询、租车还车、订单查询、个人中心、公告浏览和中英文切换；管理后台包含统计仪表盘、用户管理、单车管理、订单管理、站点管理和公告管理；运维管理包含维护记录和车辆状态更新；后端服务提供 JWT 鉴权、角色权限、REST API 和事务处理；MySQL 数据库保存核心业务数据。该图放在系统概述章节，是为了先给出系统全貌，再进入总体架构和详细流程。</p>
+<h3>3.3 模块与需求对应表</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>服务角色</th>
+<th>对应需求</th>
+<th>主要页面/接口</th>
+<th>主要数据表</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户认证模块</td>
+<td>学生、管理员、运维</td>
+<td>登录、注册、身份识别</td>
+<td>登录页、注册页、/api/auth</td>
+<td>users</td>
+</tr>
+<tr>
+<td>单车租赁模块</td>
+<td>学生</td>
+<td>查询车辆、租车、还车</td>
+<td>单车列表、车辆详情、租赁确认、当前订单</td>
+<td>bikes、rental_orders</td>
+</tr>
+<tr>
+<td>订单查询模块</td>
+<td>学生、管理员</td>
+<td>当前订单、历史订单、订单管理</td>
+<td>当前订单、历史订单、订单管理页</td>
+<td>rental_orders</td>
+</tr>
+<tr>
+<td>后台管理模块</td>
+<td>管理员</td>
+<td>用户、车辆、站点、公告、统计管理</td>
+<td>管理员仪表盘和管理列表</td>
+<td>users、bikes、stations、announcements</td>
+</tr>
+<tr>
+<td>维护管理模块</td>
+<td>运维、管理员</td>
+<td>故障维护、状态恢复</td>
+<td>维护管理页、/api/maintenance</td>
+<td>maintenance_records、bikes</td>
+</tr>
+<tr>
+<td>国际化模块</td>
+<td>所有用户</td>
+<td>中英文界面、双语公告</td>
+<td>语言切换、公告列表、公告详情</td>
+<td>announcements、users</td>
+</tr>
+</tbody>
+</table>
+<h2>4 总体设计</h2>
+<h3>4.1 前后端分离架构设计</h3>
+<p>系统采用前后端分离架构。H5 前端负责页面展示、移动端适配、语言切换、表单输入和用户交互；Node.js 后端负责认证、权限、业务规则、统一响应、异常处理、事务和数据库访问；MySQL 负责保存持久化数据。总体设计的重点是把页面展示和业务规则分离，让租车还车等关键逻辑集中在后端执行。</p>
+<p><img alt="图4-1 系统总体架构图" src="../assets/diagrams/02_architecture.svg" /></p>
+<div class="caption">图4-1 系统总体架构图</div>
+
+<p><strong>图示说明：</strong>该架构图说明前端、后端和数据库的整体分层。前端层包含路由、页面、接口封装、国际化和登录状态管理；后端层包含 JWT 鉴权、角色权限、认证接口、车辆站点接口、订单租还接口、维护公告统计接口和统一响应；数据库层保存用户、车辆、站点、订单、维护记录和公告。该图的重点是说明系统不是静态 H5 页面，而是由前端页面、REST API 和数据库共同组成，核心业务通过后端接口和数据库事务保证一致性。</p>
+<h3>4.2 部署结构设计</h3>
+<p>前端构建产物部署在 Web 前端运行环境中，用户通过移动端浏览器访问；后端运行于 Node.js 服务环境中，向前端提供 RESTful API；MySQL 数据库作为独立数据服务。环境变量中包含端口、JWT 密钥和数据库连接配置，材料中均已脱敏。</p>
+<p><img alt="图4-2 系统部署图" src="../assets/diagrams/05_deployment.svg" /></p>
+<div class="caption">图4-2 系统部署图</div>
+
+<p><strong>图示说明：</strong>该部署图说明软件实际运行时的节点关系。用户移动端浏览器加载 H5 页面，H5 页面访问前端构建产物并通过 REST JSON 调用 Node.js 后端服务，后端再通过 mysql2 访问 MySQL 数据库。该图的重点是明确浏览器、前端静态资源、后端业务服务和数据库服务的职责边界，也说明数据库连接信息、接口地址和主机信息需要通过环境变量配置并在材料中脱敏。</p>
+<h2>5 详细设计</h2>
+<h3>5.1 用户认证与权限控制</h3>
+<p>认证模块由注册、登录、个人资料、密码修改和 JWT 校验组成。注册时写入学生账号，登录时后端根据 username 查询 users 表并使用 bcryptjs 比对密码哈希，成功后签发 JWT。前端将 token 保存到 localStorage，并在请求头中携带 Authorization。后端 auth 中间件负责解析 token，role 中间件根据 student、admin、staff 控制访问范围。该设计保证学生不能访问全局用户管理接口，运维人员只能访问维护相关接口，管理员可进入后台全局管理。</p>
+<h3>5.2 租车还车核心流程</h3>
+<p>租车流程先检查用户是否已有 renting 订单，再锁定车辆记录并判断 bikes.status 是否为 available。满足条件后，后端写入 rental_orders，生成订单编号，记录 start_time、hourly_rate、start_station_id，并把车辆状态改为 rented。还车流程锁定订单，判断订单是否属于当前用户或管理员，计算租赁分钟数并向上取整到小时，写入 duration_hours 和 total_amount，最后将订单状态改为 completed 并恢复车辆为 available。</p>
+<p><img alt="图5-1 租车还车时序图" src="../assets/diagrams/03_rental_sequence.svg" /></p>
+<div class="caption">图5-1 租车还车时序图</div>
+
+<p><strong>图示说明：</strong>该时序图展示学生端、H5 前端、订单接口、JWT 鉴权和 MySQL 数据库之间的调用顺序。租车阶段重点是身份校验、车辆锁定、订单写入和车辆状态占用；还车阶段重点是订单归属校验、时长计算、费用结算、订单完成和车辆释放。该图用于证明系统核心交易流程具备明确的前后端调用链和数据库事务边界，不依赖前端直接修改业务数据。</p>
+<h3>5.3 车辆、订单与维护状态</h3>
+<p>车辆状态包含 available、rented、maintenance 和 disabled。订单状态包含 renting、completed 和 cancelled。维护状态包含 processing 和 finished。系统通过状态枚举限制业务动作，例如只有 available 车辆可以租赁，只有 renting 订单可以归还，maintenance 车辆不会作为正常可租车辆参与租赁。</p>
+<p><img alt="图5-2 订单与车辆状态图" src="../assets/diagrams/06_order_state.svg" /></p>
+<div class="caption">图5-2 订单与车辆状态图</div>
+
+<p><strong>图示说明：</strong>该状态图说明订单状态和车辆状态如何联动。学生租赁后车辆由可租赁转为已租赁，订单进入租赁中；学生归还后订单完成，车辆恢复可租赁；运维创建维护记录后车辆进入维护中，维护完成后恢复可租赁；管理员可以停用异常车辆。该图的重点是说明系统通过状态机控制业务可执行条件，避免维护中或停用车辆继续被学生租用。</p>
+<h3>5.4 国际化详细设计</h3>
+<p>前端通过 i18n 资源保存中文和英文菜单、按钮、状态、表头和提示文案，用户选择语言后写入 localStorage。公告表同时保存 title_zh、title_en、content_zh 和 content_en，前端根据当前语言展示对应内容。中英文切换不仅影响导航和按钮，也影响后台表头、状态文本和公告内容，保证学生和留学生都能理解主要业务页面。</p>
+<h2>6 数据库设计</h2>
+<h3>6.1 数据库总体说明</h3>
+<p>数据库名称为 student_bike_rental，采用 MySQL 保存业务数据。数据库脚本位于 backend/sql/schema.sql 和 backend/sql/seed.sql，演示数据脚本位于 backend/src/utils/seedDemoData.js。数据库模型围绕用户、站点、车辆、租赁订单、维护记录和公告六类对象设计，通过外键、唯一约束和状态枚举保证业务数据可追溯、可校验。</p>
+<h3>6.2 数据对象关系</h3>
+<p><img alt="图6-1 数据对象关系图" src="../assets/diagrams/04_er.svg" /></p>
+<div class="caption">图6-1 数据对象关系图</div>
+
+<p><strong>图示说明：</strong>该 ER 图说明六张核心表之间的关系。users 表是用户、学生、管理员和运维人员的统一身份来源；stations 表与 bikes 表形成站点到车辆的一对多关系；bikes 表与 rental_orders 表形成车辆到租赁订单的一对多关系；maintenance_records 记录车辆和维护人员之间的处理关系；announcements 记录公告发布人与公告内容。该图重点说明数据库不是孤立表集合，而是围绕校园车辆租赁全过程建立关联。</p>
+<h3>6.3 数据库字段说明表</h3>
+<table>
+<thead>
+<tr>
+<th>数据表</th>
+<th>字段名</th>
+<th>类型与约束</th>
+<th>中文注释与备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>users</td>
+<td>id</td>
+<td>BIGINT；主键，自增</td>
+<td>用户编号。用户唯一标识，用于关联订单、维护记录和公告发布人。</td>
+</tr>
+<tr>
+<td>users</td>
+<td>username</td>
+<td>VARCHAR(50)；唯一，非空</td>
+<td>登录账号。学生、管理员和运维人员登录系统时使用。</td>
+</tr>
+<tr>
+<td>users</td>
+<td>password</td>
+<td>VARCHAR(255)；非空</td>
+<td>密码哈希。保存 bcrypt 哈希后的密码，不保存明文密码。</td>
+</tr>
+<tr>
+<td>users</td>
+<td>role</td>
+<td>ENUM；student/admin/staff</td>
+<td>用户角色。区分学生、管理员和运维人员权限边界。</td>
+</tr>
+<tr>
+<td>users</td>
+<td>language</td>
+<td>VARCHAR(20)；默认 zh-CN</td>
+<td>默认语言。记录用户偏好的中文或英文界面语言。</td>
+</tr>
+<tr>
+<td>stations</td>
+<td>id</td>
+<td>BIGINT；主键，自增</td>
+<td>站点编号。校园站点唯一标识。</td>
+</tr>
+<tr>
+<td>stations</td>
+<td>name_zh/name_en</td>
+<td>VARCHAR(120)；非空</td>
+<td>站点中英文名称。用于在中文和英文界面展示站点名称。</td>
+</tr>
+<tr>
+<td>stations</td>
+<td>latitude/longitude</td>
+<td>DECIMAL；可空</td>
+<td>站点经纬度。用于描述站点地理位置和后续地图扩展。</td>
+</tr>
+<tr>
+<td>stations</td>
+<td>capacity</td>
+<td>INT；默认 0</td>
+<td>站点容量。表示站点可容纳车辆规模。</td>
+</tr>
+<tr>
+<td>bikes</td>
+<td>id</td>
+<td>BIGINT；主键，自增</td>
+<td>车辆主键。单车数据唯一标识。</td>
+</tr>
+<tr>
+<td>bikes</td>
+<td>bike_no</td>
+<td>VARCHAR(60)；唯一，非空</td>
+<td>车辆编码。面向运营和学生展示的车辆编号。</td>
+</tr>
+<tr>
+<td>bikes</td>
+<td>status</td>
+<td>ENUM；available/rented/maintenance/disabled</td>
+<td>车辆状态。控制车辆是否可租、已租、维护中或停用。</td>
+</tr>
+<tr>
+<td>bikes</td>
+<td>station_id</td>
+<td>BIGINT；外键，可空</td>
+<td>所属站点。关联 stations，表示车辆当前归属站点。</td>
+</tr>
+<tr>
+<td>bikes</td>
+<td>hourly_rate</td>
+<td>DECIMAL(10,2)；默认 2.00</td>
+<td>小时费率。租车计费时使用的每小时价格。</td>
+</tr>
+<tr>
+<td>rental_orders</td>
+<td>order_no</td>
+<td>VARCHAR(80)；唯一，非空</td>
+<td>订单编号。租赁订单的业务编号。</td>
+</tr>
+<tr>
+<td>rental_orders</td>
+<td>user_id</td>
+<td>BIGINT；外键，非空</td>
+<td>租赁用户。关联 users，表示订单归属学生。</td>
+</tr>
+<tr>
+<td>rental_orders</td>
+<td>bike_id</td>
+<td>BIGINT；外键，非空</td>
+<td>租赁车辆。关联 bikes，表示订单对应车辆。</td>
+</tr>
+<tr>
+<td>rental_orders</td>
+<td>start_time/end_time</td>
+<td>DATETIME；开始时间非空</td>
+<td>起止时间。用于计算租赁时长和还车结算。</td>
+</tr>
+<tr>
+<td>rental_orders</td>
+<td>duration_hours</td>
+<td>INT；可空</td>
+<td>使用小时数。归还时按不满一小时算一小时写入。</td>
+</tr>
+<tr>
+<td>rental_orders</td>
+<td>total_amount</td>
+<td>DECIMAL(10,2)；默认 0</td>
+<td>订单金额。保存归还结算后的总费用。</td>
+</tr>
+<tr>
+<td>maintenance_records</td>
+<td>bike_id</td>
+<td>BIGINT；外键，非空</td>
+<td>维护车辆。关联需要维护的车辆。</td>
+</tr>
+<tr>
+<td>maintenance_records</td>
+<td>staff_id</td>
+<td>BIGINT；外键，可空</td>
+<td>维护人员。关联执行维护的运维人员或管理员。</td>
+</tr>
+<tr>
+<td>maintenance_records</td>
+<td>content</td>
+<td>TEXT；非空</td>
+<td>维护内容。记录故障、检查和维修说明。</td>
+</tr>
+<tr>
+<td>maintenance_records</td>
+<td>status</td>
+<td>ENUM；processing/finished</td>
+<td>维护状态。表示维护处理中或已完成。</td>
+</tr>
+<tr>
+<td>announcements</td>
+<td>title_zh/title_en</td>
+<td>VARCHAR(200)；非空</td>
+<td>公告中英文标题。用于中文和英文公告列表展示。</td>
+</tr>
+<tr>
+<td>announcements</td>
+<td>content_zh/content_en</td>
+<td>TEXT；非空</td>
+<td>公告中英文内容。用于公告详情双语展示。</td>
+</tr>
+<tr>
+<td>announcements</td>
+<td>status</td>
+<td>ENUM；published/hidden</td>
+<td>公告状态。控制公告是否展示给用户。</td>
+</tr>
+</tbody>
+</table>
+<h3>6.4 数据初始化与约束说明</h3>
+<p>schema.sql 创建数据库和核心表；seed.sql 写入基础站点、车辆和公告；seedDemoData.js 写入多角色用户、多车型车辆、维护记录和历史订单。users.username、bikes.bike_no、rental_orders.order_no 采用唯一约束；rental_orders 的 user_id 和 status 建立组合索引，用于快速检查当前用户是否已有租赁中订单。租车和还车接口使用事务，防止订单写入成功但车辆状态未更新，或车辆恢复但订单金额未写入的问题。</p>
+<h2>7 接口设计</h2>
+<h3>7.1 接口模块划分</h3>
+<p>系统接口以 /api 为统一前缀，包含 /api/auth、/api/users、/api/bikes、/api/stations、/api/orders、/api/maintenance、/api/announcements 和 /api/dashboard 等模块。所有接口统一返回 code、message、data 结构，错误由统一异常处理中间件处理。</p>
+<h3>7.2 核心接口说明</h3>
+<p>认证接口负责注册、登录、个人信息和密码修改；车辆接口负责车辆列表、详情、新增、编辑和停用；站点接口负责校园站点维护；订单接口负责我的订单、当前订单、租车和还车；维护接口负责维护记录查询、创建和完成；公告接口负责公告列表、详情、发布、编辑和隐藏；统计接口负责管理员仪表盘数据。租赁接口 POST /api/orders/rent 和归还接口 PUT /api/orders/:id/return 是系统核心业务接口。</p>
+<h2>8 中英文运行界面</h2>
+<h3>8.1 学生端中英文界面对照</h3>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/01_student_home_zh.png" alt="图8-1 学生端首页中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/01_student_home_en.png" alt="图8-1 学生端首页中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-1 学生端首页中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示学生登录后首页的中文和英文界面对照。左侧为中文界面，右侧为英文界面，二者使用同一套路由和后端数据，只通过前端语言状态切换菜单、按钮和功能入口文案。该页面重点体现学生端常用入口，包括单车、当前订单、历史订单、公告和个人中心，说明系统面向国内学生和国际学生提供一致的功能结构。</p>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/02_bike_list_zh.png" alt="图8-2 单车列表中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/02_bike_list_en.png" alt="图8-2 单车列表中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-2 单车列表中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示单车列表的中文和英文界面对照。列表页面提供搜索、状态筛选、车辆卡片、站点名称、车辆价格和详情入口。中英文界面对照说明国际化不仅应用在顶部导航，也应用在筛选选项、状态文本和操作按钮。该页面对应车辆查询需求，后端数据来自 bikes 和 stations 表。</p>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/03_order_history_zh.png" alt="图8-3 历史订单中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/03_order_history_en.png" alt="图8-3 历史订单中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-3 历史订单中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示学生历史订单页的中文和英文界面对照。页面通过当前登录用户的 token 查询本人订单，展示订单编号、车辆、状态、小时数和费用。中英文对照用于说明系统在订单查询场景下也保持相同业务数据和不同语言界面，重点体现订单数据隔离、费用留存和国际化展示能力。</p>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/04_announcements_zh.png" alt="图8-4 公告列表中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/04_announcements_en.png" alt="图8-4 公告列表中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-4 公告列表中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示公告列表的中文和英文界面对照。公告模块的数据表保存中英文标题和中英文内容，前端根据语言状态选择展示对应字段。该页面重点说明系统可以向中文用户和英文用户同步发布校园骑行规则、运营提醒和安全通知，是国际化校园服务的重要组成部分。</p>
+<h3>8.2 管理端中英文界面对照</h3>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/05_admin_dashboard_zh.png" alt="图8-5 管理员仪表盘中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/05_admin_dashboard_en.png" alt="图8-5 管理员仪表盘中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-5 管理员仪表盘中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示管理员统计仪表盘的中英文界面对照。页面显示用户数量、车辆数量、当前租赁订单数量和总收入，并提供各管理模块入口。该页面重点说明管理员可以通过同一后台在不同语言环境下掌握运营状态，统计数据来自后端 dashboard 接口对用户、车辆和订单表的聚合。</p>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/06_admin_bikes_zh.png" alt="图8-6 单车管理中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/06_admin_bikes_en.png" alt="图8-6 单车管理中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-6 单车管理中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示管理员单车管理页面的中文和英文界面对照。页面列出车辆编号、名称、类型、状态、小时费率和操作按钮，支持管理员维护车辆资产。该页面重点说明车辆主数据在后台可集中管理，车辆状态会直接影响学生端是否可租赁，是连接后台资产管理和学生租赁体验的关键页面。</p>
+<div class="shot-pair">
+  <div><img src="../assets/screenshots/07_admin_maintenance_zh.png" alt="图8-7 维护管理中英文对照中文界面"><div class="shot-label">中文界面</div></div>
+  <div><img src="../assets/screenshots/07_admin_maintenance_en.png" alt="图8-7 维护管理中英文对照英文界面"><div class="shot-label">English Interface</div></div>
+</div>
+
+<div class="caption">图8-7 维护管理中英文对照</div>
+
+<p><strong>截图说明：</strong>该组截图展示维护管理页面的中文和英文界面对照。页面显示维护车辆、维护人员、处理状态、维护内容和完成操作。该页面重点说明系统支持车辆运维闭环，创建维护记录后车辆进入维护中，完成维护后恢复可租赁，从而保证车辆安全和可用性。</p>
+<h2>9 运行与部署设计</h2>
+<p>后端通过 .env 读取服务端口、JWT 密钥和数据库配置，文档中连接地址和密钥已脱敏。初始化数据库时执行 schema.sql 创建表结构，再执行 seed.sql 和 seed:demo 脚本写入测试数据。前端使用 Vite 启动开发服务，也可以通过 npm run build 生成静态构建产物部署到 Web 服务中。</p>
+<h2>10 安全与权限设计</h2>
+<p>系统采用 JWT 保持登录状态，服务端通过 auth 中间件验证 token，通过 role 中间件限制角色访问。密码在写入数据库前进行哈希处理。数据库访问使用 mysql2 参数化查询，租赁和归还等关键操作使用事务避免状态不一致。软著材料中的数据库主机、密钥、接口访问地址、账号联系信息等均已脱敏。</p>
+<h2>11 测试与验证</h2>
+<p>本次验证完成了数据库初始化、演示数据写入、学生登录、车辆列表查询、租车、当前订单查询、还车、历史订单查询、管理员登录、统计接口和用户列表接口。前端通过浏览器完成学生登录、车辆详情、租赁确认、归还确认、中英文切换和后台页面访问验证。前端生产构建通过，后端入口模块加载通过，核心链路可运行。</p>
+<h2>12 结论</h2>
+<p>国际化学生单车租赁管理软件V1.0 已实现学生端租赁闭环、管理员后台管理、运维维护记录、公告发布、中英文界面展示、数据库持久化和可部署运行能力，具备校园学生单车租赁软件的主要功能。</p>
+</body>
+</html>

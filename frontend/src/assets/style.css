@@ -1,0 +1,31 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #172033; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+.app-shell { max-width: 980px; min-height: 100vh; margin: 0 auto; background: #fff; }
+.topbar { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 12px 14px; background: #10233f; color: #fff; }
+.brand { font-weight: 700; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar a, .toolbar button, .toolbar select { border: 0; border-radius: 6px; padding: 8px 10px; background: rgba(255,255,255,.12); color: #fff; }
+.toolbar select option { color: #172033; }
+.content { padding: 16px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.card { border: 1px solid #e4e8ef; border-radius: 8px; padding: 14px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.form { display: grid; gap: 12px; max-width: 480px; }
+.form input, .form select, .form textarea { width: 100%; border: 1px solid #ccd4df; border-radius: 6px; padding: 10px; }
+.btn { border: 0; border-radius: 6px; padding: 10px 12px; background: #0d6efd; color: #fff; cursor: pointer; }
+.btn.secondary { background: #5c667a; }
+.btn.danger { background: #c0392b; }
+.muted { color: #687386; }
+.status { display: inline-block; border-radius: 999px; padding: 3px 8px; font-size: 12px; background: #e9edf3; }
+.status.available, .status.completed, .status.published { background: #dff5e8; color: #126b35; }
+.status.rented, .status.renting, .status.processing { background: #fff3cd; color: #7b5800; }
+.status.maintenance, .status.disabled, .status.hidden { background: #fde2e2; color: #9b1c1c; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { border-bottom: 1px solid #e7ebf0; padding: 10px; text-align: left; vertical-align: top; }
+@media (max-width: 680px) {
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .toolbar a, .toolbar button, .toolbar select { padding: 7px 8px; font-size: 13px; }
+  th, td { padding: 8px 6px; font-size: 12px; }
+}

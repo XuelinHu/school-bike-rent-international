@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env.local
+*.log
+.playwright-mcp/
+docs/output/check*/
+docs/output/source_pdf_text.txt
+
+backend/.env

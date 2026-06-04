@@ -1,4 +1,6 @@
-# 国际化学生单车租赁软件
+# school-bike-rent-international
+
+国际化学生单车租赁软件
 
 这是一个 Node.js + Express + MySQL 后端、Vue3 + Vite H5 前端的校园学生单车租赁系统。系统支持学生租车还车、订单查询、公告浏览、中英文切换，以及管理员后台管理用户、单车、订单、站点、维护和公告。
 
@@ -99,3 +101,7 @@ npm run dev
 - 登录使用 JWT。
 - 前端语言选择保存在 `localStorage.lang`。
 - 管理后台中的新增按钮使用演示数据快速创建记录，后续可以扩展为完整弹窗表单。
+
+## 开源协议
+
+本项目使用 GNU General Public License v2.0（GPL-2.0）开源，详见 `LICENSE`。

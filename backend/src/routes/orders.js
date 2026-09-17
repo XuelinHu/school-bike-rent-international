@@ -5,17 +5,39 @@ import { auth } from '../middleware/auth.js';
 import { allow } from '../middleware/role.js';
 import { asyncHandler, ok } from '../utils/response.js';
 import { HttpError } from '../utils/errors.js';
+import { parsePaging, paginateRows, escapeLike, whereBuilder } from '../utils/paginate.js';
 
 const router = Router();
 router.use(auth());
 
-router.get('/', allow('admin'), asyncHandler(async (_req, res) => {
-  const [rows] = await pool.execute(
-    `SELECT o.*, u.username, b.bike_no FROM rental_orders o
-     LEFT JOIN users u ON u.id=o.user_id LEFT JOIN bikes b ON b.id=o.bike_id
-     ORDER BY o.id DESC`
-  );
-  ok(res, rows);
+/** 管理端订单列表，支持关键字 / 状态 / 起止日期过滤，统一分页信封 */
+router.get('/', allow('admin'), asyncHandler(async (req, res) => {
+  const { keyword, status, from, to } = req.query;
+  const w = whereBuilder();
+  w.addIf(status, 'o.status = ?', status);
+  w.addIf(keyword, '(o.order_no LIKE ? OR b.bike_no LIKE ? OR u.username LIKE ?)',
+    ...Array(3).fill(`%${escapeLike(keyword)}%`));
+  // 日期用 >= / < 而不是 BETWEEN，避免 to 当天 00:00 之后的数据被漏掉
+  w.addIf(from, 'o.start_time >= ?', from);
+  w.addIf(to, 'o.start_time < DATE_ADD(?, INTERVAL 1 DAY)', to);
+  const { where, params } = w.build();
+  const { page, pageSize } = parsePaging(req.query);
+
+  const result = await paginateRows(pool, {
+    select: `o.*, u.username, u.name AS user_name, b.bike_no, b.name AS bike_name,
+             ss.name_zh AS start_station_zh, es.name_zh AS end_station_zh`,
+    from: `rental_orders o
+           LEFT JOIN users u ON u.id = o.user_id
+           LEFT JOIN bikes b ON b.id = o.bike_id
+           LEFT JOIN stations ss ON ss.id = o.start_station_id
+           LEFT JOIN stations es ON es.id = o.end_station_id`,
+    where,
+    params,
+    orderBy: 'o.id DESC',
+    page,
+    pageSize
+  });
+  ok(res, result);
 }));
 
 router.get('/my', asyncHandler(async (req, res) => {

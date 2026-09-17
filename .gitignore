@@ -7,3 +7,13 @@ docs/output/check*/
 docs/output/source_pdf_text.txt
 
 backend/.env
+# .env 的手工备份同样含密钥。之前漏了这条，一个 .env.bak.* 就躺在仓库里等着被
+# `git add -A` 收进去。所有 .env 变体一律忽略，只放行 .env.example。
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Claude Code 本机个人设置（不影响他人）
+.claude/settings.local.json

@@ -1,88 +1,125 @@
 <template>
-  <section>
+  <section v-if="schema">
     <div class="row">
-      <h1>{{ title }}</h1>
-      <button v-if="canCreate" class="btn" @click="createSample">{{ t('create') }}</button>
+      <h1>{{ t(type) }}</h1>
+      <button v-if="schema.canCreate" class="btn" @click="openCreate">{{ t('create') }}</button>
     </div>
-    <p class="muted">{{ message }}</p>
-    <div class="card" style="overflow:auto">
-      <table>
-        <thead>
-          <tr><th v-for="h in headers" :key="h">{{ t(h) }}</th><th>{{ t('action') }}</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in rows" :key="row.id">
-            <td v-for="h in headers" :key="h">{{ format(row[h]) }}</td>
-            <td>
-              <button v-if="type === 'maintenance' && row.status === 'processing'" class="btn" @click="finish(row)">{{ t('finish') }}</button>
-              <button v-if="deletable" class="btn danger" @click="remove(row)">{{ t('delete') }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+    <div class="row filters">
+      <input
+        v-model="keyword"
+        class="filter-input"
+        :placeholder="t('searchPlaceholder')"
+        @keyup.enter="search"
+      />
+      <template v-for="f in schema.filters" :key="f.key">
+        <select v-if="f.type === 'select'" v-model="filters[f.key]" @change="search">
+          <option value="">{{ t('all') }} · {{ t(f.labelKey || f.key) }}</option>
+          <option v-for="opt in f.options || []" :key="opt.value" :value="opt.value">{{ t(opt.labelKey) }}</option>
+        </select>
+        <label v-else-if="f.type === 'date'" class="filter-date">
+          {{ t(f.labelKey || f.key) }}
+          <input v-model="filters[f.key]" type="date" @change="search" />
+        </label>
+      </template>
+      <button class="btn secondary" @click="search">{{ t('search') }}</button>
     </div>
+
+    <p v-if="error" class="form-error">{{ error }}</p>
+
+    <AdminTable
+      :schema="schema"
+      :rows="rows"
+      :loading="loading"
+      @edit="openEdit"
+      @delete="confirmDelete"
+      @action="confirmAction"
+    />
+
+    <Pagination
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      :total="total"
+    />
+
+    <AdminFormDialog
+      :open="dialogOpen"
+      :schema="schema"
+      :row="editing"
+      :saving="saving"
+      :error="dialogError"
+      @close="dialogOpen = false"
+      @submit="submit"
+    />
   </section>
 </template>
+
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { request } from '../api/client.js';
+import { computed, ref } from 'vue';
+import AdminTable from '../components/AdminTable.vue';
+import AdminFormDialog from '../components/AdminFormDialog.vue';
+import Pagination from '../components/Pagination.vue';
+import { useAdminCrud } from '../composables/useAdminCrud.js';
+import { getSchema } from '../config/adminSchemas.js';
 import { t } from '../i18n/index.js';
 
+// 对外契约不变：仍由 6 条路由以 props.type 驱动，路由表不用动
 const props = defineProps({ type: { type: String, required: true } });
-const rows = ref([]);
-const message = ref('');
-const title = computed(() => t(props.type));
-const endpoints = {
-  users: '/users',
-  bikes: '/bikes',
-  orders: '/orders',
-  stations: '/stations',
-  maintenance: '/maintenance',
-  announcements: '/announcements'
-};
-const headerMap = {
-  users: ['id', 'username', 'name', 'role', 'status'],
-  bikes: ['id', 'bike_no', 'name', 'type', 'status', 'hourly_rate'],
-  orders: ['id', 'order_no', 'username', 'bike_no', 'status', 'total_amount'],
-  stations: ['id', 'name_zh', 'name_en', 'capacity'],
-  maintenance: ['id', 'bike_no', 'staff_name', 'status', 'content'],
-  announcements: ['id', 'title_zh', 'title_en', 'status']
-};
-const headers = computed(() => headerMap[props.type] || ['id']);
-const deletable = computed(() => ['users', 'bikes', 'stations', 'announcements'].includes(props.type));
-const canCreate = computed(() => ['bikes', 'stations', 'maintenance', 'announcements'].includes(props.type));
 
-async function load() {
-  rows.value = await request(endpoints[props.type]);
+const schema = computed(() => getSchema(props.type));
+const {
+  rows, total, page, pageSize, keyword, filters, loading, error,
+  save, remove, runAction, search
+} = useAdminCrud(() => props.type);
+
+const dialogOpen = ref(false);
+const dialogError = ref('');
+const saving = ref(false);
+/** 正在编辑的行；null 表示新建 */
+const editing = ref(null);
+
+function openCreate() {
+  editing.value = null;
+  dialogError.value = '';
+  dialogOpen.value = true;
 }
-function format(value) {
-  if (value == null) return '';
-  if (typeof value === 'string' && value.length > 60) return `${value.slice(0, 60)}...`;
-  return value;
+
+function openEdit(row) {
+  editing.value = row;
+  dialogError.value = '';
+  dialogOpen.value = true;
 }
-async function remove(row) {
-  if (!confirm('Delete this item?')) return;
-  await request(`${endpoints[props.type]}/${row.id}`, { method: 'DELETE' });
-  await load();
-}
-async function finish(row) {
-  await request(`/maintenance/${row.id}/finish`, { method: 'PUT' });
-  await load();
-}
-async function createSample() {
-  const samples = {
-    bikes: { bike_no: `BIKE-${Date.now()}`, name: 'New Bike', type: 'standard', status: 'available', station_id: 1, hourly_rate: 2, image_url: '', description: 'Created from admin' },
-    stations: { name_zh: '新站点', name_en: 'New Station', address_zh: '校园内', address_en: 'Campus', latitude: 31.23, longitude: 121.47, capacity: 20 },
-    maintenance: { bike_id: 1, content: 'Routine inspection' },
-    announcements: { title_zh: '新公告', title_en: 'New Notice', content_zh: '公告内容', content_en: 'Notice content', status: 'published' }
-  };
+
+async function submit(payload) {
+  saving.value = true;
+  dialogError.value = '';
   try {
-    await request(endpoints[props.type], { method: 'POST', body: samples[props.type] });
-    await load();
+    await save(editing.value?.id, payload);
+    dialogOpen.value = false;
   } catch (e) {
-    message.value = e.message;
+    // 错误留在弹框里而不是页面顶部，否则用户填的内容会被"看不见的错误"挡住
+    dialogError.value = e.message;
+  } finally {
+    saving.value = false;
   }
 }
-onMounted(load);
-watch(() => props.type, load);
+
+async function confirmDelete(row) {
+  const hint = schema.value.deleteHintKey ? `\n${t(schema.value.deleteHintKey)}` : '';
+  if (!confirm(`${t('confirmDelete')}${hint}`)) return;
+  try {
+    await remove(row.id);
+  } catch (e) {
+    error.value = e.message;
+  }
+}
+
+async function confirmAction(action, row) {
+  if (action.confirmKey && !confirm(t(action.confirmKey))) return;
+  try {
+    await runAction(action, row);
+  } catch (e) {
+    error.value = e.message;
+  }
+}
 </script>

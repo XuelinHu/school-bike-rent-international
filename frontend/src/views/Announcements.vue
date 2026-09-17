@@ -14,5 +14,9 @@ import { onMounted, ref } from 'vue';
 import { request } from '../api/client.js';
 import { state, t } from '../i18n/index.js';
 const list = ref([]);
-onMounted(async () => { list.value = await request('/announcements'); });
+onMounted(async () => {
+  // 列表接口统一返回信封 { list, total, page, pageSize }
+  const data = await request('/announcements');
+  list.value = data?.list || [];
+});
 </script>

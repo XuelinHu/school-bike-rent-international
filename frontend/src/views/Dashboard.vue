@@ -14,6 +14,7 @@
       <router-link class="card" to="/admin/stations">{{ t('stations') }}</router-link>
       <router-link class="card" to="/admin/maintenance">{{ t('maintenance') }}</router-link>
       <router-link class="card" to="/admin/announcements">{{ t('announcements') }}</router-link>
+      <router-link class="card" to="/admin/ai-models">{{ t('aiModels') }}</router-link>
     </div>
   </section>
 </template>

@@ -5,7 +5,10 @@
       <input v-model="form.username" :placeholder="t('username')" required />
       <input v-model="form.password" :placeholder="t('password')" type="password" required />
       <button class="btn">{{ t('login') }}</button>
-      <router-link to="/register">{{ t('register') }}</router-link>
+      <div class="row">
+        <router-link to="/register">{{ t('register') }}</router-link>
+        <router-link to="/forgot-password">{{ t('forgotPassword') }}</router-link>
+      </div>
       <p class="muted">{{ message }}</p>
     </form>
   </section>

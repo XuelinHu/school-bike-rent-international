@@ -34,7 +34,9 @@ async function load() {
   const params = new URLSearchParams();
   if (keyword.value) params.set('keyword', keyword.value);
   if (status.value) params.set('status', status.value);
-  bikes.value = await request(`/bikes?${params}`);
+  // 列表接口统一返回信封 { list, total, page, pageSize }，不再是裸数组
+  const data = await request(`/bikes?${params}`);
+  bikes.value = data?.list || [];
 }
 onMounted(load);
 </script>

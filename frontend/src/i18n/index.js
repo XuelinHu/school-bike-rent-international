@@ -4,6 +4,12 @@ export const state = reactive({
   lang: localStorage.getItem('lang') || 'zh-CN'
 });
 
+/**
+ * 文案表。两件事必须同时做到，否则界面会出现中英混排：
+ *   1) 新增的 key 两边都要加（t() 在缺失时直接回显 key，很容易被忽略）
+ *   2) 后端返回的枚举值（status / role / type）也要在这里有对应 key，
+ *      管理台表格是拿字段值直接当 key 去查的
+ */
 const messages = {
   'zh-CN': {
     app: '国际化学生单车租赁',
@@ -20,10 +26,12 @@ const messages = {
     users: '用户',
     orders: '订单',
     stations: '站点',
+    station: '所属站点',
     maintenance: '维护',
     rent: '租赁',
     returnBike: '归还',
     save: '保存',
+    saving: '保存中…',
     search: '搜索',
     username: '用户名',
     password: '密码',
@@ -39,9 +47,22 @@ const messages = {
     detail: '详情',
     all: '全部',
     create: '新增',
+    edit: '编辑',
     action: '操作',
     finish: '完成',
     delete: '删除',
+    close: '关闭',
+    cancel: '取消',
+    loading: '加载中…',
+    noData: '暂无数据',
+    pleaseSelect: '请选择',
+    total: '共',
+    perPage: '每页',
+    searchPlaceholder: '搜索…',
+    confirmDelete: '确认删除？',
+    confirmFinish: '确认完成这条维护记录？',
+    fieldRequired: '此项必填',
+    fieldTooShort: '至少 {n} 个字符',
     noActiveOrder: '暂无当前订单',
     confirmReturn: '确认归还？',
     completedTotal: '已完成，费用：',
@@ -59,7 +80,135 @@ const messages = {
     staff_name: '维护人员',
     content: '内容',
     title_zh: '中文标题',
-    title_en: '英文标题'
+    title_en: '英文标题',
+
+    // 枚举：角色 / 车辆类型 / 各类状态
+    // ⚠️ 这些 key 必须**等于数据库里的枚举值**：管理台表格是拿字段原值直接当 key 查的
+    // （t(row.role) / t(row.type)），写成 roleAdmin 之类的前缀名会全部回显成英文原文。
+    student: '学生',
+    admin: '管理员',
+    staff: '维护人员',
+    standard: '普通车',
+    city: '城市通勤车',
+    sport: '运动车',
+    active: '正常',
+    processing: '处理中',
+    finished: '已完成',
+    published: '已发布',
+    hidden: '已隐藏',
+    renting: '租用中',
+    completed: '已完成',
+    cancelled: '已取消',
+
+    // 管理台字段与筛选
+    student_no: '学号',
+    nationality: '国籍',
+    address_zh: '中文地址',
+    address_en: '英文地址',
+    latitude: '纬度',
+    longitude: '经度',
+    available_count: '可租数量',
+    bike_count: '车辆总数',
+    duration_hours: '时长(小时)',
+    start_time: '开始时间',
+    end_time: '结束时间',
+    created_at: '创建时间',
+    updated_at: '更新时间',
+    image_url: '图片地址',
+    description: '描述',
+    content_zh: '中文正文',
+    content_en: '英文正文',
+    fromDate: '开始日期',
+    toDate: '结束日期',
+
+    // 删除确认里的补充说明
+    deleteUserHint: '该账号将被停用（不会删除，历史订单仍然保留）。',
+    deleteBikeHint: '该车辆将被停用，不会从数据库中删除。',
+    deleteStationHint: '站点下还有车辆时无法删除，请先转移车辆。',
+    deleteMaintenanceHint: '只有已完成的维护记录可以删除。',
+    deleteAnnouncementHint: '公告将被下架（状态改为"已隐藏"），不会真正删除。',
+
+    // 密码相关
+    changePassword: '修改密码',
+    oldPassword: '当前密码',
+    newPassword: '新密码',
+    confirmPassword: '确认新密码',
+    forgotPassword: '忘记密码？',
+    changePasswordOk: '密码已修改，请重新登录',
+    passwordMismatch: '两次输入的新密码不一致',
+    passwordsMustMatch: '请再次输入新密码',
+    newPasswordHint: '至少 6 位字符',
+    resetPassword: '重置密码',
+    verifyIdentity: '验证身份',
+    verify: '验证',
+    verifyHint: '请填写注册时使用的信息，三项全部匹配才能重置密码。',
+    setNewPassword: '设置新密码',
+    resetOk: '密码已重置，请用新密码登录',
+    backToLogin: '返回登录',
+    needLogin: '请先登录',
+
+    // ── 智能体 ──
+    aiTitle: '智能助手',
+    aiModel: '模型',
+    aiNoModel: '暂无可用模型',
+    aiVoice: '语音播报',
+    aiDialog: '语音对话（说一句，听回答）',
+    aiClear: '清空会话',
+    // ── 语音对话状态（键名由 dialog.js 的 stateKey 生成，改动要同步）──
+    voiceIdle: '语音对话已结束',
+    voiceListening: '正在聆听…',
+    voiceTranscribing: '正在识别…',
+    voiceThinking: '正在思考…',
+    voiceSpeaking: '正在播报…',
+    voiceInsecure: '当前是 http 访问，浏览器不允许用麦克风。请改用文字输入，或在安卓 App 内使用。',
+    voiceNoSR: '当前浏览器不支持语音识别，请改用文字输入。',
+    voiceTooManyRestarts: '连续多次没听清，已退出语音对话。',
+    voiceFailed: '这一轮没能拿到回答，已退出语音对话。',
+
+    // ── 管理台：AI 模型管理 ──
+    aiModels: 'AI 模型管理',
+    refresh: '刷新',
+    yes: '是',
+    model: '模型',
+    load: '加载',
+    loaded: '已加载',
+    unload: '卸载',
+    loadedModels: '已加载进显存',
+    noLoadedModel: '当前没有已加载的模型（下一个请求会触发冷启动）',
+    localModels: '本机可用模型',
+    vram: '显存占用',
+    ctxLen: '上下文',
+    expiresAt: '到期时间',
+    params: '参数量',
+    quant: '量化',
+    diskSize: '磁盘占用',
+    isDefault: '默认模型',
+    gpuMemory: '显卡显存',
+    gpuFree: '可用',
+    gpuProcess: '进程',
+    gpuUnavailable: '读不到显卡信息',
+    gpuTight: '可用显存不足 4GB，此时加载模型很可能卡住（这台显卡是多个项目共用的）。建议先卸载再加载。',
+    aiIntro: '我是小骑，可以帮你查单车、订单、站点和公告。问我点什么吧。',
+    aiPlaceholder: '问点什么…（回车发送）',
+    aiSend: '发送',
+    aiStop: '停止',
+    aiStopped: '已停止生成',
+    aiConnecting: '正在连接模型…',
+    aiThinking: '正在思考…',
+    aiEmpty: '模型这次没有给出内容，换个说法再试试。',
+    aiPickModel: '请先选择一个模型',
+    aiFailed: '助手出错了，请稍后再试。',
+
+    // 工具名 → 中文。后端只发工具名，文案在这里查，避免中英两套在服务端漂移
+    tool_get_my_current_order: '查询我的当前订单',
+    tool_get_my_orders: '查询我的历史订单',
+    tool_list_stations: '查询站点',
+    tool_get_bike_info: '查询单车信息',
+    tool_estimate_rental_cost: '估算租金',
+    tool_list_announcements: '查询公告',
+    tool_admin_bike_status_summary: '统计车辆状态',
+    tool_admin_revenue_stats: '统计营收',
+    tool_admin_user_orders: '按用户查订单'
   },
   'en-US': {
     app: 'International Student Bike Rental',
@@ -76,10 +225,12 @@ const messages = {
     users: 'Users',
     orders: 'Orders',
     stations: 'Stations',
+    station: 'Station',
     maintenance: 'Maintenance',
     rent: 'Rent',
     returnBike: 'Return',
     save: 'Save',
+    saving: 'Saving…',
     search: 'Search',
     username: 'Username',
     password: 'Password',
@@ -95,9 +246,22 @@ const messages = {
     detail: 'Detail',
     all: 'All',
     create: 'Create',
+    edit: 'Edit',
     action: 'Action',
     finish: 'Finish',
     delete: 'Delete',
+    close: 'Close',
+    cancel: 'Cancel',
+    loading: 'Loading…',
+    noData: 'No data',
+    pleaseSelect: 'Please select',
+    total: 'Total',
+    perPage: 'Per page',
+    searchPlaceholder: 'Search…',
+    confirmDelete: 'Delete this item?',
+    confirmFinish: 'Mark this maintenance record as finished?',
+    fieldRequired: 'This field is required',
+    fieldTooShort: 'At least {n} characters',
     noActiveOrder: 'No active order',
     confirmReturn: 'Confirm return?',
     completedTotal: 'Completed. Total: ',
@@ -115,7 +279,126 @@ const messages = {
     staff_name: 'Staff',
     content: 'Content',
     title_zh: 'Chinese Title',
-    title_en: 'English Title'
+    title_en: 'English Title',
+
+    student: 'Student',
+    admin: 'Admin',
+    staff: 'Staff',
+    standard: 'Standard',
+    city: 'City',
+    sport: 'Sport',
+    active: 'Active',
+    processing: 'Processing',
+    finished: 'Finished',
+    published: 'Published',
+    hidden: 'Hidden',
+    renting: 'Renting',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+
+    student_no: 'Student No.',
+    nationality: 'Nationality',
+    address_zh: 'Chinese Address',
+    address_en: 'English Address',
+    latitude: 'Latitude',
+    longitude: 'Longitude',
+    available_count: 'Available',
+    bike_count: 'Total Bikes',
+    duration_hours: 'Duration (h)',
+    start_time: 'Start Time',
+    end_time: 'End Time',
+    created_at: 'Created At',
+    updated_at: 'Updated At',
+    image_url: 'Image URL',
+    description: 'Description',
+    content_zh: 'Chinese Content',
+    content_en: 'English Content',
+    fromDate: 'From',
+    toDate: 'To',
+
+    deleteUserHint: 'The account will be disabled, not deleted. Order history is kept.',
+    deleteBikeHint: 'The bike will be disabled, not deleted from the database.',
+    deleteStationHint: 'A station with bikes cannot be deleted. Move the bikes first.',
+    deleteMaintenanceHint: 'Only finished maintenance records can be deleted.',
+    deleteAnnouncementHint: 'The announcement will be hidden, not permanently deleted.',
+
+    changePassword: 'Change Password',
+    oldPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm New Password',
+    forgotPassword: 'Forgot password?',
+    changePasswordOk: 'Password changed. Please sign in again.',
+    passwordMismatch: 'The two passwords do not match',
+    passwordsMustMatch: 'Please repeat the new password',
+    newPasswordHint: 'At least 6 characters',
+    resetPassword: 'Reset Password',
+    verifyIdentity: 'Verify Identity',
+    verify: 'Verify',
+    verifyHint: 'Enter the details used at registration. All three must match to reset the password.',
+    setNewPassword: 'Set New Password',
+    resetOk: 'Password reset. Please sign in with the new password.',
+    backToLogin: 'Back to login',
+    needLogin: 'Please sign in first',
+
+    // ── Assistant ──
+    aiTitle: 'Assistant',
+    aiModel: 'Model',
+    aiNoModel: 'No model available',
+    aiVoice: 'Speak answers',
+    aiDialog: 'Voice chat (speak, then listen)',
+    aiClear: 'Clear chat',
+    voiceIdle: 'Voice chat ended',
+    voiceListening: 'Listening…',
+    voiceTranscribing: 'Transcribing…',
+    voiceThinking: 'Thinking…',
+    voiceSpeaking: 'Speaking…',
+    voiceInsecure: 'This page is served over http, so the browser blocks the microphone. Type instead, or use the Android app.',
+    voiceNoSR: 'This browser has no speech recognition. Please type instead.',
+    voiceTooManyRestarts: "Couldn't hear you several times in a row — voice chat ended.",
+    voiceFailed: 'No answer this round — voice chat ended.',
+
+    aiModels: 'AI models',
+    refresh: 'Refresh',
+    yes: 'Yes',
+    model: 'Model',
+    load: 'Load',
+    loaded: 'Loaded',
+    unload: 'Unload',
+    loadedModels: 'Resident in VRAM',
+    noLoadedModel: 'No model is loaded right now (the next request will cold-start one)',
+    localModels: 'Available on this machine',
+    vram: 'VRAM',
+    ctxLen: 'Context',
+    expiresAt: 'Expires',
+    params: 'Params',
+    quant: 'Quant',
+    diskSize: 'On disk',
+    isDefault: 'Default',
+    gpuMemory: 'GPU memory',
+    gpuFree: 'free',
+    gpuProcess: 'Process',
+    gpuUnavailable: 'GPU info unavailable',
+    gpuTight: 'Under 4 GB free — loading a model here will likely hang (this GPU is shared with other projects). Unload something first.',
+    aiIntro: 'I am Xiao Qi. I can look up bikes, orders, stations and announcements. Ask me anything.',
+    aiPlaceholder: 'Ask something… (Enter to send)',
+    aiSend: 'Send',
+    aiStop: 'Stop',
+    aiStopped: 'Stopped',
+    aiConnecting: 'Connecting to the model…',
+    aiThinking: 'Thinking…',
+    aiEmpty: 'The model returned nothing this time. Try rephrasing.',
+    aiPickModel: 'Please pick a model first',
+    aiFailed: 'The assistant hit an error. Please try again.',
+
+    tool_get_my_current_order: 'Checking your current order',
+    tool_get_my_orders: 'Checking your order history',
+    tool_list_stations: 'Checking stations',
+    tool_get_bike_info: 'Checking bike info',
+    tool_estimate_rental_cost: 'Estimating the fare',
+    tool_list_announcements: 'Checking announcements',
+    tool_admin_bike_status_summary: 'Summarising bike status',
+    tool_admin_revenue_stats: 'Summarising revenue',
+    tool_admin_user_orders: 'Looking up orders by user'
   }
 };
 
@@ -126,4 +409,27 @@ export function t(key) {
 export function setLang(lang) {
   state.lang = lang;
   localStorage.setItem('lang', lang);
+}
+
+// ── 开发期自检（生产构建里这段会被摇掉）────────────────────
+// 踩过的坑，两次：漏加 key 时 t() 会**静默回显 key 本身**，界面上直接出现英文原文
+// （角色列显示 "admin"、车辆类型列显示 "standard"），而页面不报任何错。
+// 所以这里主动把不一致喊出来，而不是等着有人肉眼发现中英混排。
+
+/** 所有语言共有 key 的交集/差集 */
+export function auditKeys() {
+  const langs = Object.keys(messages);
+  const all = new Set();
+  for (const lang of langs) for (const k of Object.keys(messages[lang])) all.add(k);
+
+  const report = { missing: {}, extra: [] };
+  for (const lang of langs) {
+    report.missing[lang] = [...all].filter((k) => !(k in messages[lang]));
+  }
+  return report;
+}
+
+/** 检查一组 key 是否都有译文；返回缺失列表 */
+export function missingKeys(keys) {
+  return keys.filter((k) => !(k in messages['zh-CN']) || !(k in messages['en-US']));
 }

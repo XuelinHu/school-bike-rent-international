@@ -63,7 +63,7 @@ cd backend
 npm run dev
 ```
 
-默认地址：`http://localhost:3000`。
+默认地址：`http://localhost:8032`。
 
 ## 启动前端
 
@@ -73,7 +73,7 @@ npm install
 npm run dev
 ```
 
-默认地址：`http://localhost:5173`。
+默认地址：`http://localhost:4030`。
 
 ## 主要接口
 

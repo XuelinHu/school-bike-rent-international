@@ -159,3 +159,7 @@ npm run dev
 ## 开源协议
 
 本项目使用 GNU General Public License v2.0（GPL-2.0）开源，详见 `LICENSE`。
+
+## 启动端口
+
+网页入口：4030；后台服务：8032。完整启动约定见 [PORTS.md](./PORTS.md)。

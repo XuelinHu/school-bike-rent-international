@@ -72,3 +72,7 @@ space in `" system"` is meaningful.
 ## GitHub Commit Language
 
 - Use English for all GitHub commit messages and pull/push related commit notes.
+
+## Port allocation
+
+Web: 4030. API/services: 8032. See `PORTS.md`; keep dev/preview ports fixed and fail on conflicts.

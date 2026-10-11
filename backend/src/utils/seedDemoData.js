@@ -1,13 +1,15 @@
 import bcrypt from 'bcryptjs';
 import { pool, tx } from '../config/db.js';
+import { assertDemoSeedAllowed } from './demoSeedGuard.js';
 
+const passwords = assertDemoSeedAllowed();
 const demoUsers = [
-  ['admin', 'admin123456', '系统管理员', 'admin', 'admin@example.local', '13800000000', null, 'China'],
-  ['student', 'student123456', '张同学', 'student', 'student@example.local', '13800000001', 'S20260001', 'China'],
-  ['staff', 'staff123456', '维修人员', 'staff', 'staff@example.local', '13800000002', null, 'China'],
-  ['lihua', 'student123456', '李华', 'student', 'lihua@example.local', '13800000003', 'S20260002', 'China'],
-  ['emma', 'student123456', 'Emma Smith', 'student', 'emma@example.local', '13800000004', 'S20260003', 'United Kingdom'],
-  ['akiko', 'student123456', 'Akiko Tanaka', 'student', 'akiko@example.local', '13800000005', 'S20260004', 'Japan']
+  ['admin', passwords.admin, '系统管理员', 'admin', 'admin@example.local', '13800000000', null, 'China'],
+  ['student', passwords.student, '张同学', 'student', 'student@example.local', '13800000001', 'S20260001', 'China'],
+  ['staff', passwords.staff, '维修人员', 'staff', 'staff@example.local', '13800000002', null, 'China'],
+  ['lihua', passwords.student, '李华', 'student', 'lihua@example.local', '13800000003', 'S20260002', 'China'],
+  ['emma', passwords.student, 'Emma Smith', 'student', 'emma@example.local', '13800000004', 'S20260003', 'United Kingdom'],
+  ['akiko', passwords.student, 'Akiko Tanaka', 'student', 'akiko@example.local', '13800000005', 'S20260004', 'Japan']
 ];
 
 const stations = [

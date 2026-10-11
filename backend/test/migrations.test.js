@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runMigrations } from '../src/db/migrations.js';
 import { assertDatabaseName } from '../src/config/databaseName.js';
+import { assertDemoSeedAllowed } from '../src/utils/demoSeedGuard.js';
 
 function createHarness({ lockAcquired = 1, applied = [] } = {}) {
   let released = false;
@@ -35,6 +36,25 @@ test('database names are safe SQL identifiers', () => {
   for (const invalid of ['student-bike-rental', 'x`; DROP DATABASE app;--', 'a'.repeat(65), '']) {
     assert.throws(() => assertDatabaseName(invalid), /DB_NAME may contain only/);
   }
+});
+
+test('demo seeding requires explicit opt-in, an isolated database, and distinct strong passwords', () => {
+  const env = {
+    ALLOW_DEMO_SEED: '1',
+    DB_NAME: 'student_bike_rental_test',
+    SEED_ADMIN_PASSWORD: 'Admin-Password-2026!A',
+    SEED_STUDENT_PASSWORD: 'Student-Password-2026!B',
+    SEED_STAFF_PASSWORD: 'Staff-Password-2026!C'
+  };
+  assert.deepEqual(assertDemoSeedAllowed(env), {
+    admin: env.SEED_ADMIN_PASSWORD,
+    student: env.SEED_STUDENT_PASSWORD,
+    staff: env.SEED_STAFF_PASSWORD
+  });
+  assert.throws(() => assertDemoSeedAllowed({ ...env, ALLOW_DEMO_SEED: '0' }), /ALLOW_DEMO_SEED/);
+  assert.throws(() => assertDemoSeedAllowed({ ...env, DB_NAME: 'student_bike_rental' }), /restricted/);
+  assert.throws(() => assertDemoSeedAllowed({ ...env, SEED_ADMIN_PASSWORD: 'too-short' }), /at least 16/);
+  assert.throws(() => assertDemoSeedAllowed({ ...env, SEED_STAFF_PASSWORD: env.SEED_ADMIN_PASSWORD }), /different/);
 });
 
 test('migration runner records once and skips an unchanged version', async () => {

@@ -28,25 +28,31 @@ tmp/       本次生成需求临时稿
 ## 初始化数据库
 
 ```bash
-mysql -h mysql_1 -P 3306 -u root -p < backend/sql/schema.sql
-mysql -h mysql_1 -P 3306 -u root -p student_bike_rental < backend/sql/seed.sql
-```
-
-初始化测试账号需要用 bcrypt 写入，请在安装后端依赖后运行：
-
-```bash
 cd backend
 npm install
-npm run seed
+npm run db:init
 ```
 
-测试账号：
+`db:init` 创建表结构并写入基础站点和公告，不会创建管理员账号。演示用户和业务数据只允许写入名称以 `_dev`、`_test` 或 `_demo` 结尾的隔离数据库，并且必须显式启用。请只在本机 `backend/.env` 配置以下项目，不要提交该文件：
 
-| 角色 | 用户名 | 密码 |
-| --- | --- | --- |
-| 管理员 | admin | admin123456 |
-| 学生 | student | student123456 |
-| 运维 | staff | staff123456 |
+```dotenv
+DB_NAME=student_bike_rental_test
+ALLOW_DEMO_SEED=1
+SEED_ADMIN_PASSWORD=<独立且至少16位>
+SEED_STUDENT_PASSWORD=<独立且至少16位>
+SEED_STAFF_PASSWORD=<独立且至少16位>
+SMOKE_USERNAME=student
+SMOKE_PASSWORD=<与SEED_STUDENT_PASSWORD相同>
+SMOKE_ADMIN_USERNAME=admin
+SMOKE_ADMIN_PASSWORD=<与SEED_ADMIN_PASSWORD相同>
+BASE_URL=
+```
+
+配置完后运行 `npm run seed:demo`。它会更新该隔离库中的演示账号密码，因此不要指向生产库或含有真实用户数据的数据库。`npm run seed` 也受相同的隔离库、显式开关和强密码校验保护。生产初始管理员需由独立的受控运维流程创建；本仓库的演示播种命令不支持生产数据库。
+
+冒烟测试还要求配置 `SMOKE_PASSWORD` 和 `SMOKE_ADMIN_PASSWORD`，不会回退到仓库内置口令。并发租车测试复用 `SMOKE_PASSWORD`。所有账号密码只从被忽略的本地 `.env` 读取。
+
+如需从空库执行完整自动化业务测试，可把 `DB_NAME` 设为专用 `_test` 库、配置上述本地密码并设置 `ALLOW_DEMO_SEED=1`，然后在 `backend/` 运行 `npm run test:integration`。该命令初始化隔离库、播种演示数据、启动随机本地端口的临时 API，并执行七类分页、学生/管理员登录、租车/还车和并发租赁测试；测试数据保留在该 `_test` 库中，不会自动删除数据库。
 
 ## 启动后端
 

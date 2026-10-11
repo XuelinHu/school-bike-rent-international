@@ -1,10 +1,12 @@
 import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.js';
+import { assertDemoSeedAllowed } from './demoSeedGuard.js';
 
+const passwords = assertDemoSeedAllowed();
 const users = [
-  ['admin', 'admin123456', 'System Admin', 'admin'],
-  ['student', 'student123456', 'Demo Student', 'student'],
-  ['staff', 'staff123456', 'Maintenance Staff', 'staff']
+  ['admin', passwords.admin, 'System Admin', 'admin'],
+  ['student', passwords.student, 'Demo Student', 'student'],
+  ['staff', passwords.staff, 'Maintenance Staff', 'staff']
 ];
 
 for (const [username, password, name, role] of users) {

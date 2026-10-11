@@ -25,6 +25,12 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function requiredPassword(name) {
+  const password = process.env[name];
+  if (!password) throw new Error(`${name} must be set for smoke tests.`);
+  return password;
+}
+
 async function checkPagedList(label, path, token) {
   const first = await request(`${path}${path.includes('?') ? '&' : '?'}page=1&pageSize=1`, { token });
   const data = first.data;
@@ -60,7 +66,7 @@ async function main() {
     method: 'POST',
     body: {
       username: process.env.SMOKE_USERNAME || 'student',
-      password: process.env.SMOKE_PASSWORD || 'student123456'
+      password: requiredPassword('SMOKE_PASSWORD')
     }
   });
   assert(login.status === 200 && login.data?.token, 'test account login failed; run `npm run seed:demo` first');
@@ -70,7 +76,7 @@ async function main() {
     method: 'POST',
     body: {
       username: process.env.SMOKE_ADMIN_USERNAME || 'admin',
-      password: process.env.SMOKE_ADMIN_PASSWORD || 'admin123456'
+      password: requiredPassword('SMOKE_ADMIN_PASSWORD')
     }
   });
   assert(adminLogin.status === 200 && adminLogin.data?.token, 'admin test account login failed');

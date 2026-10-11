@@ -22,5 +22,5 @@ UNION ALL
 SELECT '雨天骑行提醒', 'Rainy Day Riding Notice', '雨天路滑，请降低车速并注意安全。', 'Roads may be slippery on rainy days. Please slow down and ride safely.', 'published', NULL
 WHERE NOT EXISTS (SELECT 1 FROM announcements WHERE title_en = 'Rainy Day Riding Notice');
 
--- 初始化用户请运行：npm run seed
--- admin/admin123456, student/student123456, staff/staff123456 会以 bcrypt hash 写入。
+-- 此文件只放基础站点、车辆和公告，不写入用户账号。
+-- 测试用户只能通过受隔离保护的 npm run seed / npm run seed:demo 创建。

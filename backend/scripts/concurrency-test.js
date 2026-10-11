@@ -25,12 +25,18 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function requiredPassword(name) {
+  const password = process.env[name];
+  if (!password) throw new Error(`${name} must be set for concurrency tests.`);
+  return password;
+}
+
 async function main() {
   const login = await request('/auth/login', {
     method: 'POST',
     body: {
       username: process.env.SMOKE_USERNAME || 'student',
-      password: process.env.SMOKE_PASSWORD || 'student123456'
+      password: requiredPassword('SMOKE_PASSWORD')
     }
   });
   const token = login.payload?.data?.token;

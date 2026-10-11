@@ -20,7 +20,7 @@ import { authStore } from '../stores/auth.js';
 import { t } from '../i18n/index.js';
 const router = useRouter();
 const message = ref('');
-const form = reactive({ username: 'student', password: 'student123456' });
+const form = reactive({ username: '', password: '' });
 async function submit() {
   try {
     await authStore.login(form);

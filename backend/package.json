@@ -6,6 +6,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test": "node --test test/*.test.js",
+    "test:integration": "node scripts/integration-test.js",
     "smoke": "node scripts/smoke-test.js",
     "test:concurrency": "node scripts/concurrency-test.js",
     "test:load": "node scripts/load-test.js",

@@ -25,6 +25,33 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+async function checkPagedList(label, path, token) {
+  const first = await request(`${path}${path.includes('?') ? '&' : '?'}page=1&pageSize=1`, { token });
+  const data = first.data;
+  assert(
+    first.status === 200
+      && Array.isArray(data?.list)
+      && Number.isFinite(data.total)
+      && data.page === 1
+      && data.pageSize === 1
+      && data.list.length <= data.pageSize,
+    `${label} pagination envelope failed`
+  );
+
+  const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize));
+  if (totalPages > 1) {
+    const second = await request(`${path}${path.includes('?') ? '&' : '?'}page=2&pageSize=1`, { token });
+    assert(
+      second.status === 200
+        && Array.isArray(second.data?.list)
+        && second.data.page === 2
+        && second.data.list.length === 1
+        && data.list[0]?.id !== second.data.list[0]?.id,
+      `${label} second page failed or repeated the first page`
+    );
+  }
+}
+
 async function main() {
   const health = await request('/health');
   assert(health.status === 200 && health.data?.status === 'ok', 'health check failed');
@@ -38,6 +65,28 @@ async function main() {
   });
   assert(login.status === 200 && login.data?.token, 'test account login failed; run `npm run seed:demo` first');
   const token = login.data.token;
+
+  const adminLogin = await request('/auth/login', {
+    method: 'POST',
+    body: {
+      username: process.env.SMOKE_ADMIN_USERNAME || 'admin',
+      password: process.env.SMOKE_ADMIN_PASSWORD || 'admin123456'
+    }
+  });
+  assert(adminLogin.status === 200 && adminLogin.data?.token, 'admin test account login failed');
+  const adminToken = adminLogin.data.token;
+
+  for (const [label, path, bearer] of [
+    ['bikes', '/bikes', token],
+    ['stations', '/stations', token],
+    ['published announcements', '/announcements', token],
+    ['personal orders', '/orders/my', token],
+    ['users', '/users', adminToken],
+    ['admin orders', '/orders', adminToken],
+    ['maintenance records', '/maintenance', adminToken]
+  ]) {
+    await checkPagedList(label, path, bearer);
+  }
 
   const bikePage = await request('/bikes?page=1&pageSize=2');
   assert(
@@ -77,7 +126,7 @@ async function main() {
     }
   }
 
-  console.log('Smoke test passed: health, login, bike pagination, rent, paginated order history, return, and anonymous access rejection.');
+  console.log('Smoke test passed: health, student/admin login, seven paginated collections, rent, order history, return, and anonymous access rejection.');
 }
 
 main().catch((error) => {

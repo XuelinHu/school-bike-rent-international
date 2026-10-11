@@ -16,11 +16,11 @@ router.get('/', allow('admin'), asyncHandler(async (req, res) => {
   const { keyword, status, from, to } = req.query;
   const w = whereBuilder();
   w.addIf(status, 'o.status = ?', status);
-  w.addIf(keyword, '(o.order_no LIKE ? OR b.bike_no LIKE ? OR u.username LIKE ?)',
+  w.addIf(keyword, '(o.order_no ILIKE ? OR b.bike_no ILIKE ? OR u.username ILIKE ?)',
     ...Array(3).fill(`%${escapeLike(keyword)}%`));
   // 日期用 >= / < 而不是 BETWEEN，避免 to 当天 00:00 之后的数据被漏掉
   w.addIf(from, 'o.start_time >= ?', from);
-  w.addIf(to, 'o.start_time < DATE_ADD(?, INTERVAL 1 DAY)', to);
+  w.addIf(to, "o.start_time < (?::date + INTERVAL '1 day')", to);
   const { where, params } = w.build();
   const { page, pageSize } = parsePaging(req.query);
 
@@ -80,7 +80,7 @@ router.post('/rent', allow('student', 'admin'), asyncHandler(async (req, res) =>
       return rows[0];
     });
   } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY' && error.message.includes('uniq_rental_orders_active_user')) {
+    if (error.code === '23505' && error.constraint === 'uniq_rental_orders_active_user') {
       throw new HttpError(400, 'You already have an active rental');
     }
     throw error;

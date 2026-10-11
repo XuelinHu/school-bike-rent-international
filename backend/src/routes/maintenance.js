@@ -14,7 +14,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const w = whereBuilder();
   w.addIf(status, 'm.status = ?', status);
   w.addIf(bike_id, 'm.bike_id = ?', bike_id);
-  w.addIf(keyword, '(b.bike_no LIKE ? OR m.content LIKE ? OR u.username LIKE ?)',
+  w.addIf(keyword, '(b.bike_no ILIKE ? OR m.content ILIKE ? OR u.username ILIKE ?)',
     ...Array(3).fill(`%${escapeLike(keyword)}%`));
   const { where, params } = w.build();
   const { page, pageSize } = parsePaging(req.query);

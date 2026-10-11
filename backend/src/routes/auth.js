@@ -38,7 +38,7 @@ router.post('/register', asyncHandler(async (req, res) => {
   }
 
   // 先查一次，给出可读错误；数据库的唯一键约束仍作最后防线（并发注册时兜底）
-  const [exists] = await pool.execute('SELECT id FROM users WHERE username = ?', [username]);
+  const [exists] = await pool.execute('SELECT id FROM users WHERE lower(username) = lower(?)', [username]);
   if (exists.length) throw new HttpError(409, 'Username already exists');
 
   const hash = await bcrypt.hash(password, 10);
@@ -49,7 +49,7 @@ router.post('/register', asyncHandler(async (req, res) => {
       [username, hash, name || username, email || null, phone || null, student_no || null, nationality || null, language]
     );
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') throw new HttpError(409, 'Username already exists');
+    if (err.code === '23505') throw new HttpError(409, 'Username already exists');
     throw err;
   }
   ok(res, null, 'registered');
@@ -57,7 +57,7 @@ router.post('/register', asyncHandler(async (req, res) => {
 
 router.post('/login', asyncHandler(async (req, res) => {
   const { username, password } = req.body;
-  const [rows] = await pool.execute(`SELECT * FROM users WHERE username = ? AND status = 'active'`, [username]);
+  const [rows] = await pool.execute(`SELECT * FROM users WHERE lower(username) = lower(?) AND status = 'active'`, [username]);
   const user = rows[0];
   if (!user || !(await bcrypt.compare(password || '', user.password))) {
     throw new HttpError(401, 'Invalid username or password');
@@ -132,7 +132,7 @@ router.post('/forgot-password/verify', asyncHandler(async (req, res) => {
 
   const [rows] = await pool.execute(
     `SELECT id, username FROM users
-     WHERE username = ? AND student_no = ? AND email = ? AND status = 'active'`,
+     WHERE lower(username) = lower(?) AND student_no = ? AND email = ? AND status = 'active'`,
     [String(username).trim(), String(student_no).trim(), String(email).trim()]
   );
   const user = rows[0];

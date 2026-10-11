@@ -1,27 +1,7 @@
 /**
  * 分页与列表查询工具。
  *
- * ⚠️ 已知坑（已在本机实测确认，改代码前务必读完）
- *
- * 本项目用 mysql2 的 `pool.execute()`，走的是 MySQL 预处理语句协议。
- * MySQL 要求 LIMIT / OFFSET 的参数必须是整数类型，而 mysql2 传 JS number 会被
- * 服务端拒绝：
- *
- *     ER_WRONG_ARGUMENTS: Incorrect arguments to mysqld_stmt_execute
- *
- * 三种写法实测结果（mysql2 ^3.11.5 / MySQL 8.4）：
- *
- *     'SELECT ... LIMIT ? OFFSET ?'  +  [3, 0]      -> FAIL  ER_WRONG_ARGUMENTS
- *     'SELECT ... LIMIT ? OFFSET ?'  +  ['3', '0']  -> OK
- *     'SELECT ... LIMIT 3 OFFSET 0'  +  []          -> OK
- *
- * 注意坑的方向和直觉相反：传**数字**失败，传字符串反而通过。
- * 为了不依赖这个别扭的行为，这里统一把**已经过 parseInt + clamp 校验的整数**
- * 内联进 SQL 字符串。内联的值只可能来自下面的 parsePaging()，不可能是注入源；
- * 绝不要用外部传入的原始字符串去拼 LIMIT。
- *
- * 另外：本项目的连接池开了 `namedPlaceholders: true`，但 `?` 位置参数照常可用。
- * 同一个 SQL 里不要混用 `:name` 和 `?`。
+ * LIMIT / OFFSET values are inlined only after integer validation and bounds checking.
  */
 
 const MAX_OFFSET = 2 ** 31 - 1;
@@ -45,7 +25,7 @@ function clamp(value, min, max) {
  */
 export function parsePaging(query = {}, { defaultPageSize = 10, maxPageSize = 100 } = {}) {
   const pageSize = clamp(toInt(query.pageSize, defaultPageSize), 1, maxPageSize);
-  // 先定 pageSize 再夹 page，保证 offset 一定落在 MySQL 可接受范围内，
+  // 先定 pageSize 再夹 page，保证 offset 一定落在 PostgreSQL 安全范围内，
   // 而不是夹完 offset 再反推 page（那样页码会跳）。
   const maxPage = Math.max(1, Math.floor(MAX_OFFSET / pageSize));
   const page = clamp(toInt(query.page, 1), 1, maxPage);
@@ -86,7 +66,7 @@ export function buildOrderBy(sort, whitelist = {}, fallback = '') {
 /**
  * 执行分页查询，返回统一的列表信封。
  *
- * @param {object} executor  mysql2 的 pool，或事务里的 conn —— 两者接口一致
+ * @param {object} executor PostgreSQL pool or transaction client
  * @param {object} cfg
  * @param {string}   cfg.select    SELECT 的列（**写白名单列，不要 SELECT \***）
  * @param {string}   cfg.from      FROM 子句（含 JOIN）

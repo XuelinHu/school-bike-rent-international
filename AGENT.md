@@ -3,7 +3,7 @@
 ## Project
 
 - Project: `school-bike-rent-international`
-- Stack: Vue 3 + Vite frontend, Node.js + Express backend, MySQL
+- Stack: Vue 3 + Vite frontend, Node.js + Express backend, PostgreSQL
 
 ## Runtime
 
@@ -26,17 +26,17 @@ keeping the relative API base.
 
 ## Database
 
-- Type: MySQL.
+- Type: PostgreSQL.
 - Database name: `student_bike_rental`.
 - Env file: `backend/.env` based on `backend/.env.example`.
-- Variables: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET`.
-- Schema: `backend/sql/schema.sql`.
-- Schema versions: `backend/sql/migrations/` and `schema_migrations`; append numbered SQL files and never edit an applied migration.
-- Seed: `backend/sql/seed.sql`, plus `npm run seed` and `npm run seed:demo`.
-- `npm run db:init` creates/uses the configured `DB_NAME`, applies checksum-verified migrations under a MySQL advisory lock, then applies idempotent baseline seed rows.
-- `npm run smoke` exercises student/admin login, pagination envelopes and cross-page separation for bikes, stations, announcements, personal orders, users, admin orders, and maintenance records, plus rent/return and order authorization; it refuses to run unless `DB_NAME` ends in `_test`.
+- Variables: `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `PGPOOL_MAX`, `PGSSL`, `JWT_SECRET`.
+- Active schema: `backend/postgres/schema.sql`.
+- Schema versions: `backend/postgres/migrations/` and `schema_migrations`; append numbered migrations and never edit an applied migration.
+- Seed: `backend/postgres/seed.sql`, plus `npm run seed` and `npm run seed:demo`.
+- `npm run db:init` uses the pre-created configured `PGDATABASE`, applies checksum-verified migrations under a PostgreSQL advisory lock, then applies idempotent baseline seed rows.
+- `npm run smoke` exercises student/admin login, pagination envelopes and cross-page separation for bikes, stations, announcements, personal orders, users, admin orders, and maintenance records, plus rent/return and order authorization; it refuses to run unless `PGDATABASE` ends in `_test`.
 - `npm run test:concurrency` races two rentals for one user and verifies the database invariant; it also requires `_test` and a seeded student account.
-- Rental transactions lock the `users` row before the bike row. Keep this lock order; `uniq_rental_orders_active_user` is the database backstop that permits at most one `renting` order per user.
+- Rental transactions lock the `users` row before the bike row. Keep this lock order; a PostgreSQL partial unique index is the database backstop that permits at most one `renting` order per user.
 - `rental_orders.start_station_id` and `end_station_id` are protected by migration `003_station_history_foreign_keys` with `ON DELETE RESTRICT`; station deletion must preserve historical order references and return 409 when referenced.
 - Keep real passwords only in local `.env`.
 

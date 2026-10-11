@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (!/_test$/i.test(process.env.DB_NAME || '')) {
-  throw new Error('Smoke tests require DB_NAME to end with _test.');
+if (!/_test$/i.test(process.env.PGDATABASE || '')) {
+  throw new Error('Smoke tests require PGDATABASE to end with _test.');
 }
 
 const baseUrl = (process.env.BASE_URL || `http://127.0.0.1:${process.env.PORT || 8032}/api`).replace(/\/$/, '');

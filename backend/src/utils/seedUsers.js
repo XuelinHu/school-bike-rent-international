@@ -14,7 +14,7 @@ for (const [username, password, name, role] of users) {
   await pool.execute(
     `INSERT INTO users (username,password,name,role,status,language)
      VALUES (?,?,?,?, 'active', 'zh-CN')
-     ON DUPLICATE KEY UPDATE password=VALUES(password), name=VALUES(name), role=VALUES(role), status='active'`,
+     ON CONFLICT (lower(username)) DO UPDATE SET password=EXCLUDED.password, name=EXCLUDED.name, role=EXCLUDED.role, status='active'`,
     [username, hash, name, role]
   );
 }

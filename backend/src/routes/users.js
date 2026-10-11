@@ -26,7 +26,7 @@ function assertStatus(status) {
 router.get('/', asyncHandler(async (req, res) => {
   const { keyword, role, status } = req.query;
   const w = whereBuilder();
-  w.addIf(keyword, '(u.username LIKE ? OR u.name LIKE ? OR u.email LIKE ? OR u.student_no LIKE ?)',
+  w.addIf(keyword, '(u.username ILIKE ? OR u.name ILIKE ? OR u.email ILIKE ? OR u.student_no ILIKE ?)',
     ...Array(4).fill(`%${escapeLike(keyword)}%`));
   w.addIf(role, 'u.role = ?', role);
   w.addIf(status, 'u.status = ?', status);

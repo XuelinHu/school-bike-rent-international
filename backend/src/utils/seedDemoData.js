@@ -37,8 +37,8 @@ await tx(async (conn) => {
     await conn.execute(
       `INSERT INTO users (username,password,name,email,phone,role,student_no,nationality,language,status)
        VALUES (?,?,?,?,?,?,?,?, 'zh-CN', 'active')
-       ON DUPLICATE KEY UPDATE password=VALUES(password), name=VALUES(name), email=VALUES(email), phone=VALUES(phone),
-       role=VALUES(role), student_no=VALUES(student_no), nationality=VALUES(nationality), status='active'`,
+       ON CONFLICT (lower(username)) DO UPDATE SET password=EXCLUDED.password, name=EXCLUDED.name, email=EXCLUDED.email, phone=EXCLUDED.phone,
+       role=EXCLUDED.role, student_no=EXCLUDED.student_no, nationality=EXCLUDED.nationality, status='active'`,
       [username, hash, name, email, phone, role, studentNo, nationality]
     );
   }
@@ -56,15 +56,15 @@ await tx(async (conn) => {
     await conn.execute(
       `INSERT INTO bikes (bike_no,name,type,status,station_id,hourly_rate,image_url,description)
        VALUES (?,?,?,?,?,?,?,?)
-       ON DUPLICATE KEY UPDATE name=VALUES(name), type=VALUES(type), status=VALUES(status), station_id=VALUES(station_id),
-       hourly_rate=VALUES(hourly_rate), description=VALUES(description)`,
+       ON CONFLICT (bike_no) DO UPDATE SET name=EXCLUDED.name, type=EXCLUDED.type, status=EXCLUDED.status,
+       station_id=EXCLUDED.station_id, hourly_rate=EXCLUDED.hourly_rate, description=EXCLUDED.description`,
       [bikeNo, name, type, status, stationId, rate, '', description]
     );
   }
 
   await conn.execute(
     `INSERT INTO maintenance_records (bike_id, staff_id, content, status, start_time)
-     SELECT b.id, u.id, '刹车系统检查与车铃更换', 'processing', DATE_SUB(NOW(), INTERVAL 2 HOUR)
+     SELECT b.id, u.id, '刹车系统检查与车铃更换', 'processing', now() - INTERVAL '2 hours'
      FROM bikes b JOIN users u ON u.username='staff'
      WHERE b.bike_no='BIKE-3001'
        AND NOT EXISTS (SELECT 1 FROM maintenance_records m WHERE m.bike_id=b.id AND m.status='processing')`
@@ -72,7 +72,7 @@ await tx(async (conn) => {
 
   await conn.execute(
     `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,end_time,duration_hours,hourly_rate,total_amount,status,start_station_id,end_station_id)
-     SELECT 'RO-DEMO-001', u.id, b.id, DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR), 2, b.hourly_rate, b.hourly_rate * 2, 'completed', 1, 2
+     SELECT 'RO-DEMO-001', u.id, b.id, now() - INTERVAL '5 hours', now() - INTERVAL '3 hours', 2, b.hourly_rate, b.hourly_rate * 2, 'completed', 1, 2
      FROM users u JOIN bikes b ON b.bike_no='BIKE-1002'
      WHERE u.username='student'
        AND NOT EXISTS (SELECT 1 FROM rental_orders WHERE order_no='RO-DEMO-001')`
@@ -80,7 +80,7 @@ await tx(async (conn) => {
 
   await conn.execute(
     `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,end_time,duration_hours,hourly_rate,total_amount,status,start_station_id,end_station_id)
-     SELECT 'RO-DEMO-002', u.id, b.id, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 22 HOUR), 2, b.hourly_rate, b.hourly_rate * 2, 'completed', 2, 3
+     SELECT 'RO-DEMO-002', u.id, b.id, now() - INTERVAL '1 day', now() - INTERVAL '22 hours', 2, b.hourly_rate, b.hourly_rate * 2, 'completed', 2, 3
      FROM users u JOIN bikes b ON b.bike_no='BIKE-2001'
      WHERE u.username='emma'
        AND NOT EXISTS (SELECT 1 FROM rental_orders WHERE order_no='RO-DEMO-002')`

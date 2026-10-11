@@ -30,7 +30,7 @@ router.get('/', auth(false), asyncHandler(async (req, res) => {
     w.add(`a.status = 'published'`);
   }
 
-  w.addIf(keyword, '(a.title_zh LIKE ? OR a.title_en LIKE ? OR a.content_zh LIKE ? OR a.content_en LIKE ?)',
+  w.addIf(keyword, '(a.title_zh ILIKE ? OR a.title_en ILIKE ? OR a.content_zh ILIKE ? OR a.content_en ILIKE ?)',
     ...Array(4).fill(`%${escapeLike(keyword)}%`));
 
   const { where, params } = w.build();

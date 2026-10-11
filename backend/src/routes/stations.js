@@ -10,15 +10,14 @@ const router = Router();
 
 /**
  * 经纬度是可空列，前端留空时可能传 '' 也可能整个字段不传（undefined）。
- * 两种都要收敛成 NULL —— undefined 直接进 mysql2 的 execute() 会抛
- * "Bind parameters must not contain undefined"，表现为 500。
+ * 两种都要收敛成 NULL，避免无效绑定值导致请求失败。
  */
 const nullableNum = (v) => (v === '' || v === undefined ? null : v);
 
 router.get('/', auth(false), asyncHandler(async (req, res) => {
   const { keyword } = req.query;
   const w = whereBuilder();
-  w.addIf(keyword, '(s.name_zh LIKE ? OR s.name_en LIKE ? OR s.address_zh LIKE ? OR s.address_en LIKE ?)',
+  w.addIf(keyword, '(s.name_zh ILIKE ? OR s.name_en ILIKE ? OR s.address_zh ILIKE ? OR s.address_en ILIKE ?)',
     ...Array(4).fill(`%${escapeLike(keyword)}%`));
   const { where, params } = w.build();
   const { page, pageSize } = parsePaging(req.query);
@@ -82,15 +81,15 @@ router.delete('/:id', auth(), allow('admin'), asyncHandler(async (req, res) => {
   // 所以有车在站时直接拒绝，逼管理员先把车挪走
   const [[{ count }]] = await pool.execute('SELECT COUNT(*) AS count FROM bikes WHERE station_id=?', [req.params.id]);
   if (Number(count) > 0) throw new HttpError(409, `Station still has ${count} bike(s). Move them first.`);
-  const [[{ historyCount }]] = await pool.execute(
-    'SELECT COUNT(*) AS historyCount FROM rental_orders WHERE start_station_id=? OR end_station_id=?',
+  const [[{ history_count }]] = await pool.execute(
+    'SELECT COUNT(*) AS history_count FROM rental_orders WHERE start_station_id=? OR end_station_id=?',
     [req.params.id, req.params.id]
   );
-  if (Number(historyCount) > 0) throw new HttpError(409, 'Station is referenced by rental history.');
+  if (Number(history_count) > 0) throw new HttpError(409, 'Station is referenced by rental history.');
   try {
     await pool.execute('DELETE FROM stations WHERE id=?', [req.params.id]);
   } catch (error) {
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+    if (error.code === '23503') {
       throw new HttpError(409, 'Station is referenced by rental history.');
     }
     throw error;

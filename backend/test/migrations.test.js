@@ -10,18 +10,18 @@ function createHarness({ lockAcquired = 1, applied = [] } = {}) {
   const connection = {
     async query(sql, params = []) {
       state.statements.push(sql);
-      if (sql.includes('GET_LOCK')) return [[{ acquired: lockAcquired }]];
-      if (sql.includes('RELEASE_LOCK')) {
+      if (sql.includes('pg_advisory_lock(')) return { rows: [] };
+      if (sql.includes('pg_advisory_unlock(')) {
         released = true;
-        return [{ affectedRows: 1 }];
+        return { rows: [] };
       }
-      if (sql.startsWith('SELECT version, checksum')) return [state.applied];
+      if (sql.startsWith('SELECT version, checksum')) return { rows: state.applied };
       if (sql.startsWith('INSERT INTO schema_migrations')) {
         state.applied.push({ version: params[0], checksum: params[2] });
-        return [{ affectedRows: 1 }];
+        return { rows: [] };
       }
       if (sql === 'BROKEN DDL') throw new Error('DDL failed');
-      return [{ affectedRows: 0 }];
+      return { rows: [] };
     },
     release() {}
   };
@@ -34,14 +34,14 @@ const migration = { version: '001_initial_schema', description: 'initial', check
 test('database names are safe SQL identifiers', () => {
   assert.equal(assertDatabaseName('student_bike_rental_test'), 'student_bike_rental_test');
   for (const invalid of ['student-bike-rental', 'x`; DROP DATABASE app;--', 'a'.repeat(65), '']) {
-    assert.throws(() => assertDatabaseName(invalid), /DB_NAME may contain only/);
+    assert.throws(() => assertDatabaseName(invalid), /PGDATABASE may contain only/);
   }
 });
 
 test('demo seeding requires explicit opt-in, an isolated database, and distinct strong passwords', () => {
   const env = {
     ALLOW_DEMO_SEED: '1',
-    DB_NAME: 'student_bike_rental_test',
+    PGDATABASE: 'student_bike_rental_test',
     SEED_ADMIN_PASSWORD: 'Admin-Password-2026!A',
     SEED_STUDENT_PASSWORD: 'Student-Password-2026!B',
     SEED_STAFF_PASSWORD: 'Staff-Password-2026!C'
@@ -52,7 +52,7 @@ test('demo seeding requires explicit opt-in, an isolated database, and distinct 
     staff: env.SEED_STAFF_PASSWORD
   });
   assert.throws(() => assertDemoSeedAllowed({ ...env, ALLOW_DEMO_SEED: '0' }), /ALLOW_DEMO_SEED/);
-  assert.throws(() => assertDemoSeedAllowed({ ...env, DB_NAME: 'student_bike_rental' }), /restricted/);
+  assert.throws(() => assertDemoSeedAllowed({ ...env, PGDATABASE: 'student_bike_rental' }), /restricted/);
   assert.throws(() => assertDemoSeedAllowed({ ...env, SEED_ADMIN_PASSWORD: 'too-short' }), /at least 16/);
   assert.throws(() => assertDemoSeedAllowed({ ...env, SEED_STAFF_PASSWORD: env.SEED_ADMIN_PASSWORD }), /different/);
 });
@@ -87,7 +87,7 @@ test('failed DDL leaves no ledger record and releases the advisory lock', async 
   assert.equal(state.released(), true);
 });
 
-test('migration checksum drift, unknown versions, duplicates, and lock timeouts fail closed', async () => {
+test('migration checksum drift, unknown versions, and duplicates fail closed', async () => {
   const drift = createHarness({ applied: [{ version: migration.version, checksum: 'b'.repeat(64) }] });
   await assert.rejects(runMigrations(drift.connection, [migration], 'bike-rental-test'), /checksum mismatch/);
 
@@ -97,7 +97,4 @@ test('migration checksum drift, unknown versions, duplicates, and lock timeouts 
   const duplicate = createHarness();
   await assert.rejects(runMigrations(duplicate.connection, [migration, migration], 'bike-rental-test'), /must be unique/);
 
-  const timeout = createHarness({ lockAcquired: 0 });
-  await assert.rejects(runMigrations(timeout.connection, [migration], 'bike-rental-test'), /Timed out/);
-  assert.equal(timeout.released(), false);
 });

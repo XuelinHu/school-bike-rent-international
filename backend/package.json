@@ -11,8 +11,8 @@
     "test:concurrency": "node scripts/concurrency-test.js",
     "test:load": "node scripts/load-test.js",
     "db:init": "node src/utils/initDb.js",
-    "db:backup": "node scripts/database-snapshot.js backup",
-    "db:restore": "node scripts/database-snapshot.js restore",
+    "db:backup": "node scripts/pg-backup.mjs backup",
+    "db:restore": "node scripts/pg-backup.mjs restore",
     "seed": "node src/utils/seedUsers.js",
     "seed:demo": "node src/utils/seedDemoData.js"
   },
@@ -22,8 +22,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.5",
-    "nanoid": "^5.0.9"
+    "nanoid": "^5.0.9",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

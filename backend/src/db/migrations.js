@@ -3,17 +3,16 @@ export async function runMigrations(connection, migrations, lockName) {
     version VARCHAR(64) PRIMARY KEY,
     description VARCHAR(255) NOT NULL,
     checksum CHAR(64) NOT NULL,
-    applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
 
   let locked = false;
   try {
-    const [lockRows] = await connection.query('SELECT GET_LOCK(?, 30) AS acquired', [lockName]);
-    if (Number(lockRows[0]?.acquired) !== 1) throw new Error('Timed out waiting for the database migration lock');
+    await connection.query("SELECT pg_advisory_lock(hashtext('school-bike-rent'), hashtext($1))", [lockName]);
     locked = true;
 
-    const [appliedRows] = await connection.query('SELECT version, checksum FROM schema_migrations');
-    const applied = new Map(appliedRows.map((row) => [row.version, row.checksum]));
+    const appliedRows = await connection.query('SELECT version, checksum FROM schema_migrations');
+    const applied = new Map(appliedRows.rows.map((row) => [row.version, row.checksum]));
     const knownVersions = new Set(migrations.map((migration) => migration.version));
     const unknownVersion = [...applied.keys()].find((version) => !knownVersions.has(version));
     if (unknownVersion) throw new Error(`Database contains unknown migration ${unknownVersion}`);
@@ -28,16 +27,24 @@ export async function runMigrations(connection, migrations, lockName) {
         continue;
       }
 
-      if (typeof migration.up === 'function') await migration.up(connection);
-      else await connection.query(migration.sql);
-      await connection.query(
-        'INSERT INTO schema_migrations (version, description, checksum) VALUES (?, ?, ?)',
-        [migration.version, migration.description, migration.checksum]
-      );
+      await connection.query('BEGIN');
+      try {
+        if (typeof migration.up === 'function') await migration.up(connection);
+        else await connection.query(migration.sql);
+        await connection.query(
+          'INSERT INTO schema_migrations (version, description, checksum) VALUES ($1, $2, $3)',
+          [migration.version, migration.description, migration.checksum]
+        );
+        await connection.query('COMMIT');
+        applied.set(migration.version, migration.checksum);
+      } catch (error) {
+        await connection.query('ROLLBACK').catch(() => {});
+        throw error;
+      }
     }
   } finally {
     try {
-      if (locked) await connection.query('SELECT RELEASE_LOCK(?)', [lockName]);
+      if (locked) await connection.query("SELECT pg_advisory_unlock(hashtext('school-bike-rent'), hashtext($1))", [lockName]);
     } finally {
       connection.release();
     }

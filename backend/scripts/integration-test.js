@@ -8,8 +8,8 @@ import { pool } from '../src/config/db.js';
 
 dotenv.config();
 
-if (!/_test$/i.test(process.env.DB_NAME || '')) {
-  throw new Error('Integration tests require DB_NAME to end with _test.');
+if (!/_test$/i.test(process.env.PGDATABASE || '')) {
+  throw new Error('Integration tests require PGDATABASE to end with _test.');
 }
 
 assertDemoSeedAllowed(process.env);
@@ -27,40 +27,39 @@ function run(script) {
 
 run('src/utils/initDb.js');
 try {
-  const [foreignKeys] = await pool.query(
-    `SELECT kcu.COLUMN_NAME AS column_name,
-            kcu.REFERENCED_TABLE_NAME AS referenced_table,
-            kcu.REFERENCED_COLUMN_NAME AS referenced_column,
-            rc.DELETE_RULE AS delete_rule
-     FROM information_schema.KEY_COLUMN_USAGE kcu
-     JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
-       ON rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
-      AND rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-      AND rc.TABLE_NAME = kcu.TABLE_NAME
-     WHERE kcu.CONSTRAINT_SCHEMA = DATABASE()
-       AND kcu.TABLE_NAME = 'rental_orders'
-       AND kcu.COLUMN_NAME IN ('start_station_id', 'end_station_id')`
+  const foreignKeysResult = await pool.query(
+    `SELECT kcu.column_name, ccu.table_name AS referenced_table,
+            ccu.column_name AS referenced_column, rc.delete_rule
+     FROM information_schema.key_column_usage kcu
+     JOIN information_schema.constraint_column_usage ccu
+       ON ccu.constraint_schema = kcu.constraint_schema AND ccu.constraint_name = kcu.constraint_name
+     JOIN information_schema.referential_constraints rc
+       ON rc.constraint_schema = kcu.constraint_schema AND rc.constraint_name = kcu.constraint_name
+     WHERE kcu.table_schema = current_schema() AND kcu.table_name = 'rental_orders'
+       AND kcu.column_name IN ('start_station_id', 'end_station_id')`
   );
+  const foreignKeys = foreignKeysResult.rows;
   for (const column of ['start_station_id', 'end_station_id']) {
     const constraint = foreignKeys.find((row) => row.column_name === column);
     assert.equal(constraint?.referenced_table, 'stations', `${column} must reference stations`);
     assert.equal(constraint?.referenced_column, 'id', `${column} must reference station ids`);
     assert.equal(constraint?.delete_rule, 'RESTRICT', `${column} must preserve referenced history`);
   }
-  const [stationIndexes] = await pool.query(
-    `SELECT DISTINCT COLUMN_NAME AS column_name
-     FROM information_schema.STATISTICS
-     WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'rental_orders'
-       AND COLUMN_NAME IN ('start_station_id', 'end_station_id')`
+  const stationIndexesResult = await pool.query(
+    `SELECT DISTINCT a.attname AS column_name
+     FROM pg_index i
+     JOIN pg_class t ON t.oid = i.indrelid
+     JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(i.indkey)
+     WHERE t.relname = 'rental_orders' AND a.attname IN ('start_station_id', 'end_station_id')`
   );
+  const stationIndexes = stationIndexesResult.rows;
   for (const column of ['start_station_id', 'end_station_id']) {
     assert.ok(stationIndexes.some((index) => index.column_name === column), `${column} must have a supporting index`);
   }
-  const [migrationRows] = await pool.query(
+  const migrationResult = await pool.query(
     "SELECT checksum FROM schema_migrations WHERE version = '003_station_history_foreign_keys'"
   );
-  assert.match(migrationRows[0]?.checksum || '', /^[a-f0-9]{64}$/);
+  assert.match(migrationResult.rows[0]?.checksum || '', /^[a-f0-9]{64}$/);
 } finally {
   await pool.end();
 }

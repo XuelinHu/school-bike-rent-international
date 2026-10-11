@@ -5,13 +5,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
+import { pool } from '../src/config/db.js';
 import { assertDatabaseName } from '../src/config/databaseName.js';
 
 dotenv.config();
 
-const database = assertDatabaseName(process.env.DB_NAME || '');
-if (!/_load_test$/i.test(database)) throw new Error('Load tests require a dedicated DB_NAME ending in _load_test.');
+const database = assertDatabaseName(process.env.PGDATABASE || '');
+if (!/_load_test$/i.test(database)) throw new Error('Load tests require a dedicated PGDATABASE ending in _load_test.');
 if (process.env.LOAD_TEST_CONFIRM !== '1') throw new Error('Set LOAD_TEST_CONFIRM=1 to run against the dedicated load-test database.');
 
 const requestCount = Number(process.env.LOAD_TEST_REQUESTS || 40);
@@ -49,7 +49,7 @@ async function startApi() {
     cwd: backendRoot,
     env: {
       ...process.env,
-      DB_NAME: database,
+      PGDATABASE: database,
       JWT_SECRET: randomBytes(32).toString('hex'),
       PORT: String(port)
     },
@@ -117,7 +117,7 @@ async function timed(operation) {
 }
 
 async function seedFixtures() {
-  const [stations] = await connection.query('SELECT id FROM stations ORDER BY id LIMIT 1');
+  const [stations] = await connection.execute('SELECT id FROM stations ORDER BY id LIMIT 1');
   assert(stations.length === 1, 'The _load_test database has no station; run npm run db:init first.');
   const passwordHash = await bcrypt.hash(password, 10);
   const users = [];
@@ -127,19 +127,19 @@ async function seedFixtures() {
     const username = `${usernamePrefix}${suffix}`;
     const [userResult] = await connection.execute(
       `INSERT INTO users (username,password,name,role,status,language)
-       VALUES (?, ?, ?, 'student', 'active', 'en')`,
+       VALUES (?, ?, ?, 'student', 'active', 'en') RETURNING id`,
       [username, passwordHash, `Load test ${suffix}`]
     );
-    userIds.push(userResult.insertId);
+    userIds.push(userResult[0][0].id);
     users.push({ username, password });
 
     const [bikeResult] = await connection.execute(
       `INSERT INTO bikes (bike_no,name,type,status,station_id,hourly_rate,description)
-       VALUES (?, ?, 'standard', 'available', ?, 2.00, 'Synthetic load-test fixture')`,
+       VALUES (?, ?, 'standard', 'available', ?, 2.00, 'Synthetic load-test fixture') RETURNING id`,
       [`${bikePrefix}${suffix}`, `Load test bike ${suffix}`, stations[0].id]
     );
-    bikeIds.push(bikeResult.insertId);
-    bikes.push({ id: bikeResult.insertId, station_id: stations[0].id });
+    bikeIds.push(bikeResult[0][0].id);
+    bikes.push({ id: bikeResult[0][0].id, station_id: stations[0].id });
   }
   return { users, bikes, stationId: stations[0].id };
 }
@@ -150,9 +150,9 @@ async function cleanup() {
     await Promise.race([apiExit, new Promise((resolve) => setTimeout(resolve, 3000))]);
     if (apiProcess.exitCode === null) apiProcess.kill('SIGKILL');
   }
-  if (!connection || connection.connection?._closing) return;
+  if (!connection) return;
   try {
-    await connection.beginTransaction();
+    await connection.query('BEGIN');
     const conditions = [];
     const values = [];
     if (userIds.length) {
@@ -166,23 +166,18 @@ async function cleanup() {
     if (conditions.length) await connection.execute(`DELETE FROM rental_orders WHERE ${conditions.join(' OR ')}`, values);
     if (bikeIds.length) await connection.execute(`DELETE FROM bikes WHERE id IN (${bikeIds.map(() => '?').join(',')})`, bikeIds);
     if (userIds.length) await connection.execute(`DELETE FROM users WHERE id IN (${userIds.map(() => '?').join(',')})`, userIds);
-    await connection.commit();
+    await connection.query('COMMIT');
   } catch (error) {
-    await connection.rollback().catch(() => {});
+    await connection.query('ROLLBACK').catch(() => {});
     console.error(`Synthetic fixture cleanup failed in ${database}: ${error.message}`);
+  } finally {
+    connection.release();
+    connection = null;
   }
 }
 
 async function main() {
-  connection = await mysql.createConnection({
-    host: process.env.DB_HOST || '127.0.0.1',
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD,
-    database,
-    supportBigNumbers: true,
-    bigNumberStrings: true
-  });
+  connection = await pool.getConnection();
 
   try {
     const fixtures = await seedFixtures();
@@ -219,7 +214,7 @@ async function main() {
     console.log(`Integrity check passed: ${requestCount} orders completed, no active rentals remain.`);
   } finally {
     await cleanup();
-    if (connection) await connection.end();
+    await pool.end();
   }
 }
 

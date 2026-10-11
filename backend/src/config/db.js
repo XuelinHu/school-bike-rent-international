@@ -1,83 +1,127 @@
-import mysql from 'mysql2/promise';
+import pg from 'pg';
 import dotenv from 'dotenv';
-import { assertDatabaseName } from './databaseName.js';
 
 dotenv.config();
 
-if (!process.env.DB_PASSWORD) {
-  throw new Error('DB_PASSWORD must be set in backend/.env.');
-}
-
-const database = assertDatabaseName(process.env.DB_NAME || 'student_bike_rental');
-
-export const pool = mysql.createPool({
-  // ⚠️ 宿主机进程必须用 127.0.0.1。`mysql_1` 是 Docker 网络 1panel-network 的内部别名，
-  // Docker 内嵌 DNS 只在容器网络内可用，宿主机解析不了（getaddrinfo EAI_AGAIN）。
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD,
-  database,
-  waitForConnections: true,
-  connectionLimit: 10,
-  namedPlaceholders: true
+const { Pool, types } = pg;
+types.setTypeParser(20, (value) => {
+  const number = Number(value);
+  return Number.isSafeInteger(number) ? number : value;
 });
 
-/**
- * mysql2 预处理语句的坑：参数里只要有一个 `undefined`，`execute()` 会**直接抛**
- *   Bind parameters must not contain undefined. To pass SQL NULL specify JS null
- * 而不是把它当成 NULL。这在路由层防不胜防——前端没传某个可选字段、
- * 解构默认值没覆盖到、`x ?? y` 里 y 本身也是 undefined，都会踩到。
- * 实测复现：站点表单只填中英文名和容量、把经纬度留空 → POST /api/stations 直接 500。
- *
- * 所以在连接层统一兜底，把 undefined 归一成 null，同时打 warn 保留可观测性——
- * 真正的字段遗漏仍然能在日志里被发现，而不是被静默吞掉。
- */
-function normalizeParams(params) {
-  if (Array.isArray(params)) {
-    return params.map((v) => (v === undefined ? null : v));
-  }
-  // namedPlaceholders 打开时参数也可以是对象
-  if (params && typeof params === 'object') {
-    const out = {};
-    for (const [k, v] of Object.entries(params)) out[k] = v === undefined ? null : v;
-    return out;
-  }
-  return params;
-}
+function bindPlaceholders(sql) {
+  let index = 0;
+  let quote = null;
+  let lineComment = false;
+  let blockComment = false;
+  let result = '';
 
-function hasUndefined(params) {
-  if (Array.isArray(params)) return params.some((v) => v === undefined);
-  if (params && typeof params === 'object') return Object.values(params).some((v) => v === undefined);
-  return false;
-}
-
-/** 给一个连接（pool 或事务 conn）装上 execute 兜底 */
-function guard(conn) {
-  const rawExecute = conn.execute.bind(conn);
-  conn.execute = (sql, params) => {
-    if (hasUndefined(params)) {
-      console.warn('[db] 查询参数里出现 undefined，已按 NULL 处理。SQL:',
-        String(sql).replace(/\s+/g, ' ').slice(0, 120));
+  for (let i = 0; i < sql.length; i += 1) {
+    const char = sql[i];
+    const next = sql[i + 1];
+    if (lineComment) {
+      result += char;
+      if (char === '\n') lineComment = false;
+      continue;
     }
-    return rawExecute(sql, normalizeParams(params));
-  };
-  return conn;
+    if (blockComment) {
+      result += char;
+      if (char === '*' && next === '/') {
+        result += next;
+        i += 1;
+        blockComment = false;
+      }
+      continue;
+    }
+    if (quote) {
+      result += char;
+      if (char === quote && next === quote) {
+        result += next;
+        i += 1;
+      } else if (char === quote && sql[i - 1] !== '\\') {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === '-' && next === '-') {
+      result += `${char}${next}`;
+      i += 1;
+      lineComment = true;
+    } else if (char === '/' && next === '*') {
+      result += `${char}${next}`;
+      i += 1;
+      blockComment = true;
+    } else if (char === "'" || char === '"') {
+      quote = char;
+      result += char;
+    } else if (char === '?') {
+      result += `$${++index}`;
+    } else {
+      result += char;
+    }
+  }
+  return result;
 }
 
-guard(pool);
+const poolOptions = process.env.DATABASE_URL
+  ? { connectionString: process.env.DATABASE_URL }
+  : {
+      host: process.env.PGHOST || '127.0.0.1',
+      port: Number(process.env.PGPORT || 5432),
+      user: process.env.PGUSER || 'student_bike_rental_app',
+      password: process.env.PGPASSWORD || undefined,
+      database: process.env.PGDATABASE || 'student_bike_rental',
+      ssl: process.env.PGSSL === '1' ? { rejectUnauthorized: true } : undefined
+    };
+
+if (process.env.NODE_ENV === 'production' && !process.env.PGPASSWORD && !process.env.DATABASE_URL) {
+  throw new Error('Set PGPASSWORD or DATABASE_URL for PostgreSQL.');
+}
+
+const rawPool = new Pool({ ...poolOptions, max: Number(process.env.PGPOOL_MAX || 10) });
+
+function adapt(client) {
+  return {
+    async query(sql, params) {
+      return client.query(bindPlaceholders(sql), params);
+    },
+    async execute(sql, params = []) {
+      const result = await client.query(bindPlaceholders(sql), params.map((value) => value === undefined ? null : value));
+      return [result.rows, { affectedRows: result.rowCount, rowCount: result.rowCount }];
+    },
+    release: client.release?.bind(client)
+  };
+}
+
+export const pool = {
+  async query(sql, params) {
+    return rawPool.query(bindPlaceholders(sql), params);
+  },
+  async execute(sql, params = []) {
+    const result = await rawPool.query(bindPlaceholders(sql), params.map((value) => value === undefined ? null : value));
+    return [result.rows, { affectedRows: result.rowCount, rowCount: result.rowCount }];
+  },
+  async getConnection() {
+    return adapt(await rawPool.connect());
+  },
+  end() {
+    return rawPool.end();
+  }
+};
 
 export async function tx(work) {
-  const conn = guard(await pool.getConnection());
+  const conn = await pool.getConnection();
   try {
-    await conn.beginTransaction();
+    await conn.query('BEGIN');
     const result = await work(conn);
-    await conn.commit();
+    await conn.query('COMMIT');
     return result;
   } catch (error) {
-    await conn.rollback();
+    await conn.query('ROLLBACK').catch(() => {});
     throw error;
   } finally {
     conn.release();
   }
 }
+
+export { bindPlaceholders };

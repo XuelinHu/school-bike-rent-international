@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
+import { pool } from '../src/config/db.js';
 
 dotenv.config();
 
-if (!/_test$/i.test(process.env.DB_NAME || '')) {
-  throw new Error('Concurrency tests require DB_NAME to end with _test.');
+if (!/_test$/i.test(process.env.PGDATABASE || '')) {
+  throw new Error('Concurrency tests require PGDATABASE to end with _test.');
 }
 
 const baseUrl = (process.env.BASE_URL || `http://127.0.0.1:${process.env.PORT || 8032}/api`).replace(/\/$/, '');
@@ -65,34 +65,28 @@ async function main() {
     const after = await request('/orders/current', { token });
     assert(after.status === 200 && after.payload.data?.id === created[0].payload.data.id, 'active rental state is inconsistent');
 
-    const db = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
+    const db = await pool.getConnection();
     try {
-      await db.beginTransaction();
+      await db.query('BEGIN');
       let constraintError;
       try {
         await db.execute(
           `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,hourly_rate,status,start_station_id)
-           VALUES (?, ?, ?, NOW(), ?, 'renting', ?)`,
+           VALUES (?, ?, ?, now(), ?, 'renting', ?)`,
           [`RO-CONSTRAINT-PROBE-${Date.now()}`, created[0].payload.data.user_id, candidates[1].id,
             candidates[1].hourly_rate, candidates[1].station_id]
         );
       } catch (error) {
         constraintError = error;
       }
-      await db.rollback();
+      await db.query('ROLLBACK');
       assert(
-        constraintError?.code === 'ER_DUP_ENTRY'
-          && constraintError.message.includes('uniq_rental_orders_active_user'),
+        constraintError?.code === '23505'
+          && constraintError.constraint === 'uniq_rental_orders_active_user',
         'database unique constraint did not reject a second active rental'
       );
     } finally {
-      await db.end();
+      db.release();
     }
   } finally {
     for (const attempt of created) {

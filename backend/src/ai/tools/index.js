@@ -265,7 +265,7 @@ const TOOLS = {
       const [daily] = await pool.execute(
         `SELECT DATE(end_time) AS day, COUNT(*) AS orders, COALESCE(SUM(total_amount), 0) AS revenue
          FROM rental_orders
-         WHERE status = 'completed' AND end_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+         WHERE status = 'completed' AND end_time >= now() - INTERVAL '7 days'
          GROUP BY DATE(end_time) ORDER BY day DESC`
       );
       const [active] = await pool.execute(

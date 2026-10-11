@@ -9,7 +9,7 @@ export function assertDemoSeedAllowed(env = process.env) {
   if (env.ALLOW_DEMO_SEED !== '1') {
     throw new Error('Demo seeding requires ALLOW_DEMO_SEED=1.');
   }
-  if (!SAFE_DATABASE_SUFFIX.test(env.DB_NAME || '')) {
+  if (!SAFE_DATABASE_SUFFIX.test(env.PGDATABASE || '')) {
     throw new Error('Demo seeding is restricted to databases ending in _dev, _test, or _demo.');
   }
 

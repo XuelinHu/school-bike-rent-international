@@ -5,13 +5,13 @@
   <img height="20" alt="Vite 6.0.3" src="https://img.shields.io/badge/vite-6.0.3-646CFF" />
   <img height="20" alt="Vue Router 4.5.0" src="https://img.shields.io/badge/vue_router-4.5.0-4FC08D" />
   <img height="20" alt="Express 4.21.2" src="https://img.shields.io/badge/express-4.21.2-000000" />
-  <img height="20" alt="MySQL configured" src="https://img.shields.io/badge/mysql-configured-4479A1" />
+  <img height="20" alt="PostgreSQL 18" src="https://img.shields.io/badge/PostgreSQL-18-4169E1" />
   <img height="20" alt="License GPL-2.0" src="https://img.shields.io/badge/license-GPL--2.0-3DA639" />
 </p>
 
 国际化学生单车租赁软件
 
-这是一个 Node.js + Express + MySQL 后端、Vue3 + Vite H5 前端的校园学生单车租赁系统。系统支持学生租车还车、订单查询、公告浏览、中英文切换，以及管理员后台管理用户、单车、订单、站点、维护和公告。
+这是一个 Node.js + Express + PostgreSQL 后端、Vue3 + Vite H5 前端的校园学生单车租赁系统。系统支持学生租车还车、订单查询、公告浏览、中英文切换，以及管理员后台管理用户、单车、订单、站点、维护和公告。
 
 ## 目录结构
 
@@ -36,7 +36,7 @@ npm run db:init
 `db:init` 创建表结构并写入基础站点和公告，不会创建管理员账号。演示用户和业务数据只允许写入名称以 `_dev`、`_test` 或 `_demo` 结尾的隔离数据库，并且必须显式启用。请只在本机 `backend/.env` 配置以下项目，不要提交该文件：
 
 ```dotenv
-DB_NAME=student_bike_rental_test
+PGDATABASE=student_bike_rental_test
 ALLOW_DEMO_SEED=1
 SEED_ADMIN_PASSWORD=<独立且至少16位>
 SEED_STUDENT_PASSWORD=<独立且至少16位>
@@ -54,7 +54,7 @@ BASE_URL=
 
 忘记密码核验的 IP 限速使用 API TCP 对端地址；当前 API 未配置可信反向代理，不会采信客户端提供的 `X-Forwarded-For`。
 
-如需从空库执行完整自动化业务测试，可把 `DB_NAME` 设为专用 `_test` 库、配置上述本地密码并设置 `ALLOW_DEMO_SEED=1`，然后在 `backend/` 运行 `npm run test:integration`。该命令初始化隔离库、播种演示数据、启动随机本地端口的临时 API，并执行七类分页、学生/管理员登录、租车/还车、并发租赁及租赁历史站点保护测试；测试数据保留在该 `_test` 库中，不会自动删除数据库。
+如需从空库执行完整自动化业务测试，可把 `PGDATABASE` 设为专用 `_test` 库、配置上述本地密码并设置 `ALLOW_DEMO_SEED=1`，然后在 `backend/` 运行 `npm run test:integration`。该命令初始化隔离库、播种演示数据、启动随机本地端口的临时 API，并执行七类分页、学生/管理员登录、租车/还车、并发租赁及租赁历史站点保护测试；测试数据保留在该 `_test` 库中，不会自动删除数据库。
 
 ## 启动后端
 
@@ -77,34 +77,40 @@ npm run dev
 
 前端默认通过同源 `/api` 访问后端；Vite 开发和预览服务会将请求代理到本机 `8032` 端口。安卓 WebView 或局域网浏览器使用 `http://<服务器局域网地址>:4030`，无需把 API 地址写成手机的 `localhost`。独立部署 API 时，可在构建环境中用 `VITE_API_BASE` 覆盖为 HTTPS API 地址。
 
-数据库初始化使用配置的 `DB_NAME`，并将 migration 版本与 SHA-256 checksum 记录到 `schema_migrations`。`backend/sql/schema.sql` 是不可修改的 `001_initial_schema` 基线；后续结构调整请新增 `backend/sql/migrations/NNN_description.sql` 或 `NNN_description.js`，不要改写已应用的 migration。初始化采用 MySQL advisory lock 串行执行，并在成功后写入版本记录；基础站点和公告 seed 可重复运行。`003_station_history_foreign_keys` 为租赁起止站点建立 `ON DELETE RESTRICT` 外键，检测到孤儿订单引用时会拒绝迁移；删除被车辆或历史订单引用的站点会返回 409。
+首次部署前由 PostgreSQL 管理员运行 `backend/postgres/provision-role.psql`，为单车项目创建专属数据库和 `student_bike_rental_app` 运行角色；脚本不会接管所有者不匹配的既有数据库。随后在 `backend/.env` 配置该角色的独立口令，应用迁移只使用此角色。Windows 本机 PostgreSQL 18 示例：
+
+```powershell
+$pgAdmin = Read-Host 'PostgreSQL 管理员角色'
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h 127.0.0.1 -p 5432 -U $pgAdmin -d postgres -f backend/postgres/provision-role.psql
+```
+
+数据库初始化使用预先创建的 `PGDATABASE`，并将 migration 版本与 SHA-256 checksum 记录到 `schema_migrations`。`backend/postgres/schema.sql` 是初始基线；后续结构调整请新增 `backend/postgres/migrations/NNN_description.js`，不要改写已应用的 migration。初始化采用 PostgreSQL advisory lock 串行执行并校验 checksum；基础站点和公告 seed 可重复运行。`003_station_history_foreign_keys` 为租赁起止站点建立 `ON DELETE RESTRICT` 外键，检测到孤儿订单引用时会拒绝迁移；删除被车辆或历史订单引用的站点会返回 409。
 
 ### 数据库加密备份与测试库恢复
 
-备份使用 InnoDB 一致性快照、gzip 和 AES-256-GCM；密钥通过 `DB_BACKUP_ENCRYPTION_KEY` 提供，必须是 64 位十六进制字符串，并应单独保存在密码管理器中。不要将备份文件或密钥提交到仓库。生成密钥可在本地运行 `node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"`，然后把结果安全地设置到当前运行环境。
+备份使用 PostgreSQL `pg_dump` custom 格式和 AES-256-GCM；密钥通过 `DB_BACKUP_ENCRYPTION_KEY` 提供，必须是 64 位十六进制字符串，并应单独保存在密码管理器中。不要将备份文件或密钥提交到仓库。生成密钥可在本地运行 `node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"`，然后把结果安全地设置到当前运行环境。
 
 ```bash
 cd backend
 npm run db:backup
 ```
 
-默认输出到 `backend/backups/`，已有目标文件不会被覆盖。演练恢复时，先在 `backend/.env` 中把 `DB_NAME` 改为专用的 `_test` 数据库名，并使用与备份相同的密钥；初始化该测试库后，再显式确认替换其中的数据：
+默认输出到 `backend/backups/`，已有目标文件不会被覆盖。演练恢复必须指定与来源不同的专用 `_test` 数据库名，并使用与备份相同的密钥；`--replace` 明确表示允许覆盖目标测试库对象：
 
 ```bash
-npm run db:init
-npm run db:restore -- --source "./backups/student_bike_rental-<timestamp>.sbrbak" --replace
+npm run db:restore -- --source "./backups/student-bike-rental-<database>-<timestamp>.pgbak" --database student_bike_rental_restore_test --replace
 ```
 
-恢复工具只允许 `DB_NAME` 以 `_test` 结尾；目标必须预先初始化为与快照相同的表结构。它会先验证加密认证标签、结构指纹和每表行数，再在事务中替换行数据，并恢复自增序列位置；不执行快照中的 SQL，也不删除数据库。恢复演练后仍应核对业务记录，并定期把加密备份复制到独立存储。
+恢复工具只允许目标名以 `_test` 结尾且不同于来源库。它会先验证加密认证标签和 PostgreSQL custom archive，再通过 `pg_restore` 在单事务中恢复；它不会创建或删除数据库。恢复演练后仍应核对业务记录，并定期把加密备份复制到独立存储。
 
 后端功能冒烟测试只允许使用名称以 `_test` 结尾的数据库：先在测试配置中运行 `npm run db:init` 和 `npm run seed:demo`，启动 API 后运行 `npm run smoke`。测试覆盖七类列表分页及跨页分离，并实际创建、归还一笔租车订单。
 租车并发约束也可在同一隔离环境验证：运行 `npm run test:concurrency`，脚本会并发请求两辆可用车辆，检查每个用户只能有一笔活动订单，并归还成功创建的测试订单。
-数据库通过虚拟生成列和唯一索引强制每位用户最多一笔活动租车；服务事务先锁用户再锁车辆，避免同一用户并发选择不同车辆时绕过活动订单检查。迁移会在创建唯一索引前检查重复活动订单，发现冲突会停止并报告用户 ID，不会自动改写存量订单。
+数据库通过部分唯一索引强制每位用户最多一笔活动租车；服务事务先锁用户再锁车辆，避免同一用户并发选择不同车辆时绕过活动订单检查。迁移会在创建唯一索引前检查重复活动订单，发现冲突会停止并报告用户 ID，不会自动改写存量订单。
 
 多用户订单负载验证使用独立的 `_load_test` 数据库，会启动临时 API 实例，并创建、归还后清理 40 个合成用户和车辆。请求数可设置为 10–100；只有显式确认变量存在时才会运行：
 
 ```powershell
-$env:DB_NAME = "bike_rental_20261012_load_test"
+$env:PGDATABASE = "bike_rental_20261012_load_test"
 $env:LOAD_TEST_CONFIRM = "1"
 $env:LOAD_TEST_REQUESTS = "40"
 npm run db:init

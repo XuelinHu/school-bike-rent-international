@@ -52,7 +52,7 @@ BASE_URL=
 
 冒烟测试还要求配置 `SMOKE_PASSWORD` 和 `SMOKE_ADMIN_PASSWORD`，不会回退到仓库内置口令。并发租车测试复用 `SMOKE_PASSWORD`。所有账号密码只从被忽略的本地 `.env` 读取。
 
-如需从空库执行完整自动化业务测试，可把 `DB_NAME` 设为专用 `_test` 库、配置上述本地密码并设置 `ALLOW_DEMO_SEED=1`，然后在 `backend/` 运行 `npm run test:integration`。该命令初始化隔离库、播种演示数据、启动随机本地端口的临时 API，并执行七类分页、学生/管理员登录、租车/还车和并发租赁测试；测试数据保留在该 `_test` 库中，不会自动删除数据库。
+如需从空库执行完整自动化业务测试，可把 `DB_NAME` 设为专用 `_test` 库、配置上述本地密码并设置 `ALLOW_DEMO_SEED=1`，然后在 `backend/` 运行 `npm run test:integration`。该命令初始化隔离库、播种演示数据、启动随机本地端口的临时 API，并执行七类分页、学生/管理员登录、租车/还车、并发租赁及租赁历史站点保护测试；测试数据保留在该 `_test` 库中，不会自动删除数据库。
 
 ## 启动后端
 
@@ -75,7 +75,7 @@ npm run dev
 
 前端默认通过同源 `/api` 访问后端；Vite 开发和预览服务会将请求代理到本机 `8032` 端口。安卓 WebView 或局域网浏览器使用 `http://<服务器局域网地址>:4030`，无需把 API 地址写成手机的 `localhost`。独立部署 API 时，可在构建环境中用 `VITE_API_BASE` 覆盖为 HTTPS API 地址。
 
-数据库初始化使用配置的 `DB_NAME`，并将 migration 版本与 SHA-256 checksum 记录到 `schema_migrations`。`backend/sql/schema.sql` 是不可修改的 `001_initial_schema` 基线；后续结构调整请新增 `backend/sql/migrations/NNN_description.sql` 或 `NNN_description.js`，不要改写已应用的 migration。初始化采用 MySQL advisory lock 串行执行，并在成功后写入版本记录；基础站点和公告 seed 可重复运行。
+数据库初始化使用配置的 `DB_NAME`，并将 migration 版本与 SHA-256 checksum 记录到 `schema_migrations`。`backend/sql/schema.sql` 是不可修改的 `001_initial_schema` 基线；后续结构调整请新增 `backend/sql/migrations/NNN_description.sql` 或 `NNN_description.js`，不要改写已应用的 migration。初始化采用 MySQL advisory lock 串行执行，并在成功后写入版本记录；基础站点和公告 seed 可重复运行。`003_station_history_foreign_keys` 为租赁起止站点建立 `ON DELETE RESTRICT` 外键，检测到孤儿订单引用时会拒绝迁移；删除被车辆或历史订单引用的站点会返回 409。
 
 ### 数据库加密备份与测试库恢复
 

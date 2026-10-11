@@ -37,6 +37,7 @@ keeping the relative API base.
 - `npm run smoke` exercises student/admin login, pagination envelopes and cross-page separation for bikes, stations, announcements, personal orders, users, admin orders, and maintenance records, plus rent/return and order authorization; it refuses to run unless `DB_NAME` ends in `_test`.
 - `npm run test:concurrency` races two rentals for one user and verifies the database invariant; it also requires `_test` and a seeded student account.
 - Rental transactions lock the `users` row before the bike row. Keep this lock order; `uniq_rental_orders_active_user` is the database backstop that permits at most one `renting` order per user.
+- `rental_orders.start_station_id` and `end_station_id` are protected by migration `003_station_history_foreign_keys` with `ON DELETE RESTRICT`; station deletion must preserve historical order references and return 409 when referenced.
 - Keep real passwords only in local `.env`.
 
 ## AI Assistant (backend/src/ai)

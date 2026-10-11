@@ -103,13 +103,23 @@ async function main() {
   const bike = bikeSearch.data?.list?.find((row) => row.bike_no === 'BIKE-1001' && row.status === 'available');
   assert(bike, 'available smoke bike BIKE-1001 not found; run `npm run seed:demo` first');
 
+  const stationName = `SMOKE-STATION-${Date.now()}`;
+  const stationCreated = await request('/stations', {
+    method: 'POST', token: adminToken,
+    body: { name_zh: stationName, name_en: stationName, capacity: 1 }
+  });
+  assert(stationCreated.status === 200, 'smoke station creation failed');
+  const stationPage = await request(`/stations?keyword=${encodeURIComponent(stationName)}&page=1&pageSize=5`);
+  const smokeStation = stationPage.data?.list?.find((station) => station.name_en === stationName);
+  assert(smokeStation, 'smoke station was not found after creation');
+
   const current = await request('/orders/current', { token });
   assert(current.status === 200 && !current.data, 'test account already has an active rental');
   let order;
   try {
     const rent = await request('/orders/rent', {
       method: 'POST', token,
-      body: { bike_id: bike.id, start_station_id: bike.station_id }
+      body: { bike_id: bike.id, start_station_id: smokeStation.id }
     });
     assert(rent.status === 200 && rent.data?.status === 'renting', 'rental creation failed');
     order = rent.data;
@@ -126,13 +136,22 @@ async function main() {
     if (order?.id) {
       const returned = await request(`/orders/${order.id}/return`, {
         method: 'PUT', token,
-        body: { end_station_id: bike.station_id }
+        body: { end_station_id: smokeStation.id }
       });
       assert(returned.status === 200 && returned.data?.status === 'completed', 'rental return failed');
     }
   }
 
-  console.log('Smoke test passed: health, student/admin login, seven paginated collections, rent, order history, return, and anonymous access rejection.');
+  const bikeRestored = await request(`/bikes/${bike.id}`, {
+    method: 'PUT', token: adminToken,
+    body: { station_id: bike.station_id }
+  });
+  assert(bikeRestored.status === 200, 'smoke bike could not be moved back to its original station');
+
+  const deleteStation = await request(`/stations/${smokeStation.id}`, { method: 'DELETE', token: adminToken });
+  assert(deleteStation.status === 409, 'station referenced by rental history was not protected');
+
+  console.log('Smoke test passed: health, student/admin login, seven paginated collections, rent, order history, return, and station-history deletion protection.');
 }
 
 main().catch((error) => {

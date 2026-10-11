@@ -82,7 +82,19 @@ router.delete('/:id', auth(), allow('admin'), asyncHandler(async (req, res) => {
   // 所以有车在站时直接拒绝，逼管理员先把车挪走
   const [[{ count }]] = await pool.execute('SELECT COUNT(*) AS count FROM bikes WHERE station_id=?', [req.params.id]);
   if (Number(count) > 0) throw new HttpError(409, `Station still has ${count} bike(s). Move them first.`);
-  await pool.execute('DELETE FROM stations WHERE id=?', [req.params.id]);
+  const [[{ historyCount }]] = await pool.execute(
+    'SELECT COUNT(*) AS historyCount FROM rental_orders WHERE start_station_id=? OR end_station_id=?',
+    [req.params.id, req.params.id]
+  );
+  if (Number(historyCount) > 0) throw new HttpError(409, 'Station is referenced by rental history.');
+  try {
+    await pool.execute('DELETE FROM stations WHERE id=?', [req.params.id]);
+  } catch (error) {
+    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+      throw new HttpError(409, 'Station is referenced by rental history.');
+    }
+    throw error;
+  }
   ok(res, null, 'deleted');
 }));
 

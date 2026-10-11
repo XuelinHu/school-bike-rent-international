@@ -11,9 +11,19 @@ backend/.env
 # `git add -A` 收进去。所有 .env 变体一律忽略，只放行 .env.example。
 backend/.env.*
 !backend/.env.example
+backend/backups/
 frontend/.env
 frontend/.env.*
 !frontend/.env.example
 
 # Claude Code 本机个人设置（不影响他人）
 .claude/settings.local.json
+
+/android/.gradle/
+/android/local.properties
+/android/app/build/
+/android/build/
+/dist/*.apk
+
+/android/build/
+/dist/*.apk

@@ -23,15 +23,7 @@ tmp/       本次生成需求临时稿
 
 ## 数据库配置
 
-后端默认读取 `backend/.env`：
-
-```env
-DB_HOST=mysql_1
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=Java@c1024
-DB_NAME=student_bike_rental
-```
+后端连接配置从 `backend/.env` 读取，字段模板见 `backend/.env.example`。不要把真实账号、密码或连接串写入文档或提交到 Git；曾公开的数据库凭据应在数据库端轮换。
 
 ## 初始化数据库
 
@@ -74,6 +66,44 @@ npm run dev
 ```
 
 默认地址：`http://localhost:4030`。
+
+前端默认通过同源 `/api` 访问后端；Vite 开发和预览服务会将请求代理到本机 `8032` 端口。安卓 WebView 或局域网浏览器使用 `http://<服务器局域网地址>:4030`，无需把 API 地址写成手机的 `localhost`。独立部署 API 时，可在构建环境中用 `VITE_API_BASE` 覆盖为 HTTPS API 地址。
+
+数据库初始化使用配置的 `DB_NAME`，并将 migration 版本与 SHA-256 checksum 记录到 `schema_migrations`。`backend/sql/schema.sql` 是不可修改的 `001_initial_schema` 基线；后续结构调整请新增 `backend/sql/migrations/NNN_description.sql` 或 `NNN_description.js`，不要改写已应用的 migration。初始化采用 MySQL advisory lock 串行执行，并在成功后写入版本记录；基础站点和公告 seed 可重复运行。
+
+### 数据库加密备份与测试库恢复
+
+备份使用 InnoDB 一致性快照、gzip 和 AES-256-GCM；密钥通过 `DB_BACKUP_ENCRYPTION_KEY` 提供，必须是 64 位十六进制字符串，并应单独保存在密码管理器中。不要将备份文件或密钥提交到仓库。生成密钥可在本地运行 `node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"`，然后把结果安全地设置到当前运行环境。
+
+```bash
+cd backend
+npm run db:backup
+```
+
+默认输出到 `backend/backups/`，已有目标文件不会被覆盖。演练恢复时，先在 `backend/.env` 中把 `DB_NAME` 改为专用的 `_test` 数据库名，并使用与备份相同的密钥；初始化该测试库后，再显式确认替换其中的数据：
+
+```bash
+npm run db:init
+npm run db:restore -- --source "./backups/student_bike_rental-<timestamp>.sbrbak" --replace
+```
+
+恢复工具只允许 `DB_NAME` 以 `_test` 结尾；目标必须预先初始化为与快照相同的表结构。它会先验证加密认证标签、结构指纹和每表行数，再在事务中替换行数据，并恢复自增序列位置；不执行快照中的 SQL，也不删除数据库。恢复演练后仍应核对业务记录，并定期把加密备份复制到独立存储。
+
+后端功能冒烟测试只允许使用名称以 `_test` 结尾的数据库：先在测试配置中运行 `npm run db:init` 和 `npm run seed:demo`，启动 API 后运行 `npm run smoke`。测试会实际创建并归还一笔租车订单。
+租车并发约束也可在同一隔离环境验证：运行 `npm run test:concurrency`，脚本会并发请求两辆可用车辆，检查每个用户只能有一笔活动订单，并归还成功创建的测试订单。
+数据库通过虚拟生成列和唯一索引强制每位用户最多一笔活动租车；服务事务先锁用户再锁车辆，避免同一用户并发选择不同车辆时绕过活动订单检查。迁移会在创建唯一索引前检查重复活动订单，发现冲突会停止并报告用户 ID，不会自动改写存量订单。
+
+多用户订单负载验证使用独立的 `_load_test` 数据库，会启动临时 API 实例，并创建、归还后清理 40 个合成用户和车辆。请求数可设置为 10–100；只有显式确认变量存在时才会运行：
+
+```powershell
+$env:DB_NAME = "bike_rental_20261012_load_test"
+$env:LOAD_TEST_CONFIRM = "1"
+$env:LOAD_TEST_REQUESTS = "40"
+npm run db:init
+npm run test:load
+```
+
+负载脚本测量登录、并发租车、并发还车各阶段的吞吐及 p50/p95 延迟，并检查订单与车辆状态。它拒绝其他数据库名；请勿将业务库或已有测试数据目录指定为该负载目标。
 
 ## 主要接口
 

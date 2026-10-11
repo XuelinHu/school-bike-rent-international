@@ -1,7 +1,14 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import { assertDatabaseName } from './databaseName.js';
 
 dotenv.config();
+
+if (!process.env.DB_PASSWORD) {
+  throw new Error('DB_PASSWORD must be set in backend/.env.');
+}
+
+const database = assertDatabaseName(process.env.DB_NAME || 'student_bike_rental');
 
 export const pool = mysql.createPool({
   // ⚠️ 宿主机进程必须用 127.0.0.1。`mysql_1` 是 Docker 网络 1panel-network 的内部别名，
@@ -9,8 +16,8 @@ export const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'Java@c1024',
-  database: process.env.DB_NAME || 'student_bike_rental',
+  password: process.env.DB_PASSWORD,
+  database,
   waitForConnections: true,
   connectionLimit: 10,
   namedPlaceholders: true

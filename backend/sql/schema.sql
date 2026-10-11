@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS student_bike_rental DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE student_bike_rental;
-
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   username VARCHAR(50) NOT NULL UNIQUE,

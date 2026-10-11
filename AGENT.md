@@ -12,20 +12,17 @@
 - Backend dev: `cd backend && npm run dev`.
 - Frontend dev: `cd frontend && npm run dev`.
 
-### ⚠️ Frontend does NOT use the Vite proxy
+### Frontend API routing
 
-`vite.config.js` defines `proxy: { '/api': ... }`, but **nothing uses it** — `src/api/client.js`
-builds an absolute URL from `VITE_API_BASE` (default `http://localhost:8032/api`).
-Dev requests are therefore real cross-origin requests, allowed by the backend's `cors()`.
+`src/api/client.js` defaults to the relative `/api` path. Both the Vite dev server and preview
+server proxy `/api` to `http://localhost:8032`, keeping the phone/WebView request same-origin
+with the web page and avoiding cross-origin LAN restrictions.
 
-Consequences worth remembering:
+For deployment, serve the frontend on port 4030 and the API on port 8032 on the same host. If the
+API is hosted elsewhere, set `VITE_API_BASE` at build time to its HTTPS URL and configure CORS.
 
-- Deploying to a phone without setting `VITE_API_BASE` makes the app call the phone itself.
-  See `frontend/.env.example`.
-- Because it is cross-origin, every `POST` to the AI endpoint shows up twice in network traces
-  (`OPTIONS 204` preflight + the real `POST`). That is normal, not a duplicate request.
-- The stale proxy block is harmless but misleading; do not "fix" the app by switching to
-  relative `/api` paths without also changing the deployment story.
+The `preview.proxy` entry matters for the Android WebView deployment; do not remove it while
+keeping the relative API base.
 
 ## Database
 
@@ -34,7 +31,12 @@ Consequences worth remembering:
 - Env file: `backend/.env` based on `backend/.env.example`.
 - Variables: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET`.
 - Schema: `backend/sql/schema.sql`.
+- Schema versions: `backend/sql/migrations/` and `schema_migrations`; append numbered SQL files and never edit an applied migration.
 - Seed: `backend/sql/seed.sql`, plus `npm run seed` and `npm run seed:demo`.
+- `npm run db:init` creates/uses the configured `DB_NAME`, applies checksum-verified migrations under a MySQL advisory lock, then applies idempotent baseline seed rows.
+- `npm run smoke` exercises login, bike pagination, rent/return, and order authorization; it refuses to run unless `DB_NAME` ends in `_test`.
+- `npm run test:concurrency` races two rentals for one user and verifies the database invariant; it also requires `_test` and a seeded student account.
+- Rental transactions lock the `users` row before the bike row. Keep this lock order; `uniq_rental_orders_active_user` is the database backstop that permits at most one `renting` order per user.
 - Keep real passwords only in local `.env`.
 
 ## AI Assistant (backend/src/ai)

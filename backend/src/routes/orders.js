@@ -6,6 +6,7 @@ import { allow } from '../middleware/role.js';
 import { asyncHandler, ok } from '../utils/response.js';
 import { HttpError } from '../utils/errors.js';
 import { parsePaging, paginateRows, escapeLike, whereBuilder } from '../utils/paginate.js';
+import { getMyOrderPage } from '../services/orderHistory.js';
 
 const router = Router();
 router.use(auth());
@@ -41,8 +42,7 @@ router.get('/', allow('admin'), asyncHandler(async (req, res) => {
 }));
 
 router.get('/my', asyncHandler(async (req, res) => {
-  const [rows] = await pool.execute('SELECT * FROM rental_orders WHERE user_id=? ORDER BY id DESC', [req.user.id]);
-  ok(res, rows);
+  ok(res, await getMyOrderPage(pool, req.user.id, req.query));
 }));
 
 router.get('/current', asyncHandler(async (req, res) => {
@@ -60,22 +60,31 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
 router.post('/rent', allow('student', 'admin'), asyncHandler(async (req, res) => {
   const { bike_id, start_station_id } = req.body;
-  const order = await tx(async (conn) => {
-    const [active] = await conn.execute(`SELECT id FROM rental_orders WHERE user_id=? AND status='renting'`, [req.user.id]);
-    if (active.length) throw new HttpError(400, 'You already have an active rental');
-    const [bikes] = await conn.execute(`SELECT * FROM bikes WHERE id=? FOR UPDATE`, [bike_id]);
-    const bike = bikes[0];
-    if (!bike || bike.status !== 'available') throw new HttpError(400, 'Bike is not available');
-    await conn.execute(`UPDATE bikes SET status='rented' WHERE id=?`, [bike_id]);
-    const orderNo = `RO${Date.now()}${nanoid(6).toUpperCase()}`;
-    await conn.execute(
-      `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,hourly_rate,status,start_station_id)
-       VALUES (?, ?, ?, NOW(), ?, 'renting', ?)`,
-      [orderNo, req.user.id, bike_id, bike.hourly_rate, start_station_id || bike.station_id]
-    );
-    const [rows] = await conn.execute('SELECT * FROM rental_orders WHERE order_no=?', [orderNo]);
-    return rows[0];
-  });
+  let order;
+  try {
+    order = await tx(async (conn) => {
+      await conn.execute('SELECT id FROM users WHERE id=? FOR UPDATE', [req.user.id]);
+      const [active] = await conn.execute(`SELECT id FROM rental_orders WHERE user_id=? AND status='renting'`, [req.user.id]);
+      if (active.length) throw new HttpError(400, 'You already have an active rental');
+      const [bikes] = await conn.execute(`SELECT * FROM bikes WHERE id=? FOR UPDATE`, [bike_id]);
+      const bike = bikes[0];
+      if (!bike || bike.status !== 'available') throw new HttpError(400, 'Bike is not available');
+      await conn.execute(`UPDATE bikes SET status='rented' WHERE id=?`, [bike_id]);
+      const orderNo = `RO${Date.now()}${nanoid(6).toUpperCase()}`;
+      await conn.execute(
+        `INSERT INTO rental_orders (order_no,user_id,bike_id,start_time,hourly_rate,status,start_station_id)
+         VALUES (?, ?, ?, NOW(), ?, 'renting', ?)`,
+        [orderNo, req.user.id, bike_id, bike.hourly_rate, start_station_id || bike.station_id]
+      );
+      const [rows] = await conn.execute('SELECT * FROM rental_orders WHERE order_no=?', [orderNo]);
+      return rows[0];
+    });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY' && error.message.includes('uniq_rental_orders_active_user')) {
+      throw new HttpError(400, 'You already have an active rental');
+    }
+    throw error;
+  }
   ok(res, order, 'rented');
 }));
 

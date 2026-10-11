@@ -11,8 +11,8 @@
     "test:concurrency": "node scripts/concurrency-test.js",
     "test:load": "node scripts/load-test.js",
     "db:init": "node src/utils/initDb.js",
-    "db:backup": "node scripts/pg-backup.mjs backup",
-    "db:restore": "node scripts/pg-backup.mjs restore",
+    "db:backup": "node --env-file-if-exists=.env scripts/pg-backup.mjs backup",
+    "db:restore": "node --env-file-if-exists=.env scripts/pg-backup.mjs restore",
     "seed": "node src/utils/seedUsers.js",
     "seed:demo": "node src/utils/seedDemoData.js"
   },

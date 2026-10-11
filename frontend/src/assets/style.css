@@ -28,6 +28,8 @@ th, td { border-bottom: 1px solid #e7ebf0; padding: 10px; text-align: left; vert
 .center { text-align: center; }
 .form-error { margin: 0; color: #9b1c1c; font-size: 14px; }
 .form-ok { margin: 0; color: #126b35; font-size: 14px; }
+.oidc-login { width: 100%; }
+.profile-oidc { margin-top: 16px; }
 
 /* ── 表单字段（管理台弹框 / 改密码页共用）── */
 .field { display: grid; gap: 4px; }

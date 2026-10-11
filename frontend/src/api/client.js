@@ -17,7 +17,7 @@ export function token() {
  */
 export async function* streamRequest(path, { body, signal } = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (token()) headers.Authorization = `Bearer ${token()}`;
+  if (token() && !headers.Authorization) headers.Authorization = `Bearer ${token()}`;
 
   const response = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
@@ -64,7 +64,7 @@ export async function* streamRequest(path, { body, signal } = {}) {
 
 export async function request(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (token()) headers.Authorization = `Bearer ${token()}`;
+  if (token() && !headers.Authorization) headers.Authorization = `Bearer ${token()}`;
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,

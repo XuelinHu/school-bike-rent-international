@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { pool } from '../config/db.js';
+import { pool, tx } from '../config/db.js';
 import { auth } from '../middleware/auth.js';
 import { asyncHandler, ok } from '../utils/response.js';
 import { HttpError } from '../utils/errors.js';
 import { createLimiter, clientIp } from '../utils/rateLimit.js';
+import { verifyOidcAccessToken } from '../auth/oidc.js';
 
 const router = Router();
 const publicUserFields = 'id, username, name, email, phone, role, student_no, nationality, language, status, created_at';
@@ -25,6 +26,8 @@ function resetSecret() {
 // 因此按 IP 和按用户名各限一道，抬高撞库成本
 const verifyLimiterByIp = createLimiter({ windowMs: 10 * 60 * 1000, max: 5 });
 const verifyLimiterByUser = createLimiter({ windowMs: 10 * 60 * 1000, max: 3 });
+const oidcLoginLimiter = createLimiter({ windowMs: 15 * 60 * 1000, max: 30 });
+const oidcLinkLimiter = createLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
 
 /** 身份核验失败的统一文案：绝不区分"用户名不存在"还是"学号不对"，避免被逐项试出来 */
 const IDENTITY_MISMATCH = 'Identity information does not match our records';
@@ -65,6 +68,50 @@ router.post('/login', asyncHandler(async (req, res) => {
   const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
   delete user.password;
   ok(res, { token, user });
+}));
+
+router.post('/oidc', asyncHandler(async (req, res) => {
+  if (!oidcLoginLimiter(clientIp(req)).allowed) throw new HttpError(429, 'Too many sign-in attempts');
+  let identity;
+  try { identity = await verifyOidcAccessToken(req.body?.accessToken); }
+  catch { throw new HttpError(401, 'Invalid identity token'); }
+
+  const [rows] = await pool.execute("SELECT * FROM users WHERE oidc_subject = ? AND status = 'active'", [identity.subject]);
+  const user = rows[0];
+  if (!user) throw new HttpError(403, 'No active local account is linked. Sign in locally and link it from your profile first.');
+  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
+  delete user.password;
+  delete user.oidc_subject;
+  ok(res, { token, user });
+}));
+
+router.post('/oidc/link', auth(), asyncHandler(async (req, res) => {
+  if (!oidcLinkLimiter(`${clientIp(req)}:${req.user.id}`).allowed) throw new HttpError(429, 'Too many identity-link attempts');
+  let identity;
+  try { identity = await verifyOidcAccessToken(req.body?.accessToken); }
+  catch { throw new HttpError(401, 'Invalid identity token'); }
+
+  try {
+    await tx(async (connection) => {
+      const [rows] = await connection.execute("SELECT id, oidc_subject FROM users WHERE id = ? AND status = 'active' FOR UPDATE", [req.user.id]);
+      const user = rows[0];
+      if (!user) throw new HttpError(403, 'This local account is unavailable');
+      if (user.oidc_subject && user.oidc_subject !== identity.subject) throw new HttpError(409, 'This local account is already linked to another identity');
+      const [existing] = await connection.execute('SELECT id FROM users WHERE oidc_subject = ? AND id <> ?', [identity.subject, req.user.id]);
+      if (existing.length) throw new HttpError(409, 'This identity is already linked to another local account');
+      await connection.execute('UPDATE users SET oidc_subject = ? WHERE id = ?', [identity.subject, req.user.id]);
+    });
+  } catch (error) {
+    if (error.code === '23505') throw new HttpError(409, 'This identity is already linked to another local account');
+    throw error;
+  }
+  ok(res, { linked: true });
+}));
+
+router.get('/oidc/status', auth(), asyncHandler(async (req, res) => {
+  const [rows] = await pool.execute('SELECT oidc_subject IS NOT NULL AS linked FROM users WHERE id = ?', [req.user.id]);
+  if (!rows[0]) throw new HttpError(404, 'User not found');
+  ok(res, { linked: rows[0].linked });
 }));
 
 router.get('/profile', auth(), asyncHandler(async (req, res) => {

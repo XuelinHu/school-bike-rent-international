@@ -6,6 +6,9 @@
   <img height="20" alt="Vue Router 4.5.0" src="https://img.shields.io/badge/vue_router-4.5.0-4FC08D" />
   <img height="20" alt="Express 4.21.2" src="https://img.shields.io/badge/express-4.21.2-000000" />
   <img height="20" alt="PostgreSQL 18" src="https://img.shields.io/badge/PostgreSQL-18-4169E1" />
+  <img height="20" alt="OpenID Connect PKCE" src="https://img.shields.io/badge/OpenID_Connect-PKCE-7B42BC" />
+  <img height="20" alt="keycloak-js 26.2.4" src="https://img.shields.io/badge/keycloak--js-26.2.4-4D4D4D" />
+  <img height="20" alt="jose 6.2.12" src="https://img.shields.io/badge/jose-6.2.12-555555" />
   <img height="20" alt="License GPL-2.0" src="https://img.shields.io/badge/license-GPL--2.0-3DA639" />
 </p>
 
@@ -24,6 +27,8 @@ tmp/       本次生成需求临时稿
 ## 数据库配置
 
 后端连接配置从 `backend/.env` 读取，字段模板见 `backend/.env.example`。不要把真实账号、密码或连接串写入文档或提交到 Git；曾公开的数据库凭据应在数据库端轮换。
+
+统一登录使用 Keycloak OIDC Authorization Code + PKCE。先用已有的本地账号登录并在个人中心绑定；后续登录按不可变 `sub` 找回原本地用户，不会按用户名或邮箱自动合并。API 校验签名、issuer、audience 与客户端后签发本项目 JWT，角色仍由该项目数据库决定。新增身份字段由 `004_oidc_identity` 迁移创建；开发证书需要把可信 CA 配置到 API 的 `NODE_EXTRA_CA_CERTS`。
 
 ## 初始化数据库
 

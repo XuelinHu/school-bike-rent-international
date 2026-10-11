@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import migration from '../postgres/migrations/003_station_history_foreign_keys.js';
+import oidcMigration from '../postgres/migrations/004_oidc_identity.js';
 
 function createConnection({ orphanColumn, existing = [] } = {}) {
   const state = { constraints: new Map(existing.map((row) => [row.constraint, row])), statements: [] };
@@ -43,4 +44,35 @@ test('station-history migration rejects an existing constraint with different be
   ] });
   await assert.rejects(migration.up(connection), /unexpected definition/);
   assert.equal(connection.state.statements.some((sql) => sql.startsWith('ALTER TABLE')), false);
+});
+
+function createOidcConnection({ column = null, index = null } = {}) {
+  const state = { column, index, statements: [] };
+  return {
+    state,
+    async query(sql) {
+      state.statements.push(sql);
+      if (sql.includes('information_schema.columns')) return { rows: state.column ? [{ column_name: 'oidc_subject', data_type: state.column }] : [] };
+      if (sql.includes('FROM pg_indexes')) return { rows: state.index ? [{ indexdef: state.index }] : [] };
+      if (sql.startsWith('ALTER TABLE users ADD COLUMN')) state.column = 'text';
+      if (sql.startsWith('CREATE UNIQUE INDEX')) state.index = 'CREATE UNIQUE INDEX uq_users_oidc_subject ON public.users USING btree (oidc_subject) WHERE (oidc_subject IS NOT NULL)';
+      return { rows: [] };
+    }
+  };
+}
+
+test('OIDC identity migration adds a nullable subject and unique index once', async () => {
+  const connection = createOidcConnection();
+  await oidcMigration.up(connection);
+  await oidcMigration.up(connection);
+  assert.equal(connection.state.column, 'text');
+  assert.equal(connection.state.statements.filter((sql) => sql.startsWith('ALTER TABLE')).length, 1);
+  assert.equal(connection.state.statements.filter((sql) => sql.startsWith('CREATE UNIQUE INDEX')).length, 1);
+});
+
+test('OIDC identity migration rejects conflicting existing definitions', async () => {
+  await assert.rejects(oidcMigration.up(createOidcConnection({ column: 'character varying' })), /unexpected type/);
+  await assert.rejects(oidcMigration.up(createOidcConnection({
+    column: 'text', index: 'CREATE INDEX uq_users_oidc_subject ON users (oidc_subject)'
+  })), /unexpected definition/);
 });

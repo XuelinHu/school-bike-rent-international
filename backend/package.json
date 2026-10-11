@@ -11,6 +11,7 @@
     "test:concurrency": "node scripts/concurrency-test.js",
     "test:load": "node scripts/load-test.js",
     "db:init": "node src/utils/initDb.js",
+    "db:migrate": "node --env-file-if-exists=.env src/utils/migrateDb.js",
     "db:backup": "node --env-file-if-exists=.env scripts/pg-backup.mjs backup",
     "db:restore": "node --env-file-if-exists=.env scripts/pg-backup.mjs restore",
     "seed": "node src/utils/seedUsers.js",
@@ -21,6 +22,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jose": "^6.2.12",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.0.9",
     "pg": "^8.23.1"

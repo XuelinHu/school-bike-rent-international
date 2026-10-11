@@ -14,6 +14,11 @@ const messages = {
   'zh-CN': {
     app: '国际化学生单车租赁',
     login: '登录',
+    unifiedLogin: '使用统一账号登录',
+    unifiedAccount: '统一账号',
+    unifiedLinked: '已绑定统一账号。',
+    unifiedNotLinked: '尚未绑定统一账号。',
+    linkUnifiedAccount: '绑定统一账号',
     register: '注册',
     logout: '退出',
     home: '首页',
@@ -213,6 +218,11 @@ const messages = {
   'en-US': {
     app: 'International Student Bike Rental',
     login: 'Login',
+    unifiedLogin: 'Continue with unified account',
+    unifiedAccount: 'Unified account',
+    unifiedLinked: 'A unified identity is linked.',
+    unifiedNotLinked: 'No unified identity is linked.',
+    linkUnifiedAccount: 'Link unified account',
     register: 'Register',
     logout: 'Logout',
     home: 'Home',

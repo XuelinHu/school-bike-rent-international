@@ -13,15 +13,41 @@
       </div>
       <p class="muted">{{ message }}</p>
     </form>
+
+    <section class="card profile-oidc">
+      <h2>{{ t('unifiedAccount') }}</h2>
+      <p>{{ oidcStatus === null ? t('loading') : oidcStatus ? t('unifiedLinked') : t('unifiedNotLinked') }}</p>
+      <p v-if="oidcMessage" :class="oidcMessage === t('unifiedLinked') ? 'form-ok' : 'form-error'">{{ oidcMessage }}</p>
+      <button v-if="oidcStatus === false" class="btn" type="button" @click="linkUnifiedAccount">{{ t('linkUnifiedAccount') }}</button>
+    </section>
   </section>
 </template>
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
 import { request } from '../api/client.js';
 import { t } from '../i18n/index.js';
+import { authStore } from '../stores/auth.js';
+import { beginOidcLogin } from '../auth/oidc.js';
 const message = ref('');
 const form = reactive({ name: '', email: '', phone: '', nationality: '', language: 'zh-CN' });
-onMounted(async () => Object.assign(form, await request('/auth/profile')));
+const oidcStatus = ref(null);
+const oidcMessage = ref('');
+onMounted(async () => {
+  try {
+    Object.assign(form, await request('/auth/profile'));
+    oidcStatus.value = (await authStore.oidcLinked()).linked;
+  } catch (error) {
+    oidcMessage.value = error.message;
+  }
+  const result = sessionStorage.getItem('oidc-link-result');
+  if (result) oidcMessage.value = result === 'linked' ? t('unifiedLinked') : result;
+  sessionStorage.removeItem('oidc-link-result');
+});
+
+function linkUnifiedAccount() {
+  oidcMessage.value = '';
+  beginOidcLogin({ link: true }).catch((error) => { oidcMessage.value = error.message; });
+}
 async function save() {
   await request('/auth/profile', { method: 'PUT', body: form });
   message.value = 'saved';

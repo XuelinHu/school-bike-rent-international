@@ -53,9 +53,7 @@ export function createLimiter({ windowMs = 10 * 60 * 1000, max = 5, maxKeys = 50
   };
 }
 
-/** 取客户端 IP。部署在反向代理后面时依赖 X-Forwarded-For，本项目走 FRP，没有可信代理层。 */
+/** 当前服务未配置可信代理，只能使用 TCP 对端地址，不能信任客户端可伪造的转发头。 */
 export function clientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length) return forwarded.split(',')[0].trim();
-  return req.ip || req.socket?.remoteAddress || 'unknown';
+  return req.socket?.remoteAddress || req.ip || 'unknown';
 }

@@ -52,6 +52,8 @@ BASE_URL=
 
 冒烟测试还要求配置 `SMOKE_PASSWORD` 和 `SMOKE_ADMIN_PASSWORD`，不会回退到仓库内置口令。并发租车测试复用 `SMOKE_PASSWORD`。所有账号密码只从被忽略的本地 `.env` 读取。
 
+忘记密码核验的 IP 限速使用 API TCP 对端地址；当前 API 未配置可信反向代理，不会采信客户端提供的 `X-Forwarded-For`。
+
 如需从空库执行完整自动化业务测试，可把 `DB_NAME` 设为专用 `_test` 库、配置上述本地密码并设置 `ALLOW_DEMO_SEED=1`，然后在 `backend/` 运行 `npm run test:integration`。该命令初始化隔离库、播种演示数据、启动随机本地端口的临时 API，并执行七类分页、学生/管理员登录、租车/还车、并发租赁及租赁历史站点保护测试；测试数据保留在该 `_test` 库中，不会自动删除数据库。
 
 ## 启动后端

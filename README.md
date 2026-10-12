@@ -68,7 +68,7 @@ cd backend
 npm run dev
 ```
 
-默认地址：`http://localhost:8032`。
+默认地址：`http://127.0.0.1:8032`；后端仅绑定回环地址，由 Vite 同源代理提供前端 API。
 
 ## 启动前端
 
@@ -80,7 +80,7 @@ npm run dev
 
 默认地址：`http://localhost:4030`。
 
-前端默认通过同源 `/api` 访问后端；Vite 开发和预览服务会将请求代理到本机 `8032` 端口。安卓 WebView 或局域网浏览器使用 `http://<服务器局域网地址>:4030`，无需把 API 地址写成手机的 `localhost`。独立部署 API 时，可在构建环境中用 `VITE_API_BASE` 覆盖为 HTTPS API 地址。
+前端默认通过同源 `/api` 访问后端；Vite 开发和预览服务会将请求代理到本机 `127.0.0.1:8032`。安卓 WebView 或局域网浏览器使用 `http://<服务器局域网地址>:4030`，无需把 API 地址写成手机的 `localhost`。独立部署 API 时，可在构建环境中用 `VITE_API_BASE` 覆盖为 HTTPS API 地址。
 
 首次部署前由 PostgreSQL 管理员运行 `backend/postgres/provision-role.psql`，为单车项目创建专属数据库和 `student_bike_rental_app` 运行角色；脚本不会接管所有者不匹配的既有数据库。随后在 `backend/.env` 配置该角色的独立口令，应用迁移只使用此角色。Windows 本机 PostgreSQL 18 示例：
 

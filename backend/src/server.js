@@ -1,6 +1,7 @@
 import app from './app.js';
 
 const port = Number(process.env.PORT || 8032);
-app.listen(port, () => {
-  console.log(`Student bike rental API running at http://localhost:${port}`);
+const host = process.env.API_HOST || '127.0.0.1';
+app.listen(port, host, () => {
+  console.log(`Student bike rental API running at http://${host}:${port}`);
 });

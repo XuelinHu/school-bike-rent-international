@@ -36,8 +36,8 @@
   },
   {
     "path": "backend/src/routes/orders.js",
-    "sha256": "7660b782288511fec8f5262895892b0373c6484a155dc03d2766a952658db5d3",
-    "bytes": 5322
+    "sha256": "61fa38285d816a283c8586fde60ae83d394a0b90ab6211f62ee0063eab366358",
+    "bytes": 5360
   },
   {
     "path": "backend/src/routes/stations.js",
@@ -66,8 +66,8 @@
   },
   {
     "path": "backend/src/ai/tools/index.js",
-    "sha256": "2d4bc971f83fb36602f0d3dbf888dbe1aae837cba60fa4e5d865d0485d4d1213",
-    "bytes": 17055
+    "sha256": "faebccd4a67c72bdae6c4a4432d58099b761328260ce4fbbefd94ac5ef8dc874",
+    "bytes": 17169
   },
   {
     "path": "frontend/src/App.vue",
@@ -96,8 +96,8 @@
   },
   {
     "path": "frontend/src/views/Login.vue",
-    "sha256": "79d91817604e5eeb4d7d4c4d4ca8cfca557862342e5315f2bcca53b84c6497fc",
-    "bytes": 3107
+    "sha256": "e8fca4dddab5a969b59bb1db75b79d7f95941e737649567c331ca1bfaf20e9c5",
+    "bytes": 3712
   },
   {
     "path": "frontend/src/views/Bikes.vue",

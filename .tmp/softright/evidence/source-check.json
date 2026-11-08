@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "key": {
-    "pdf_sha256": "b744573e5d3c1ffb4c3a3dbac8d3eba383df37eef403b3ac2758b49d2f978c00",
+    "pdf_sha256": "4811baa70dd41decb1c0038b5ae20ace73e2ecf8a09513d602b1c49daa6d7b0b",
     "checker_sha256": "7c9dfbef9564c2267b994c93a865a20d6b109078ee96a62dce8857511c45604d",
     "options": {
       "document_type": "source",

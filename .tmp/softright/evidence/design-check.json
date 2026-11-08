@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "key": {
-    "pdf_sha256": "9ec3a839c8a2fb104eb5a8ddefc3af1a52b9bfd661b82c10ee84eb1ecf2bc00e",
+    "pdf_sha256": "9512917363d14b6fd2c16a1a9d95d7a00831a674e43e3e6274cff94e9ed8aaa2",
     "checker_sha256": "7c9dfbef9564c2267b994c93a865a20d6b109078ee96a62dce8857511c45604d",
     "options": {
       "document_type": "document",
@@ -27,7 +27,7 @@
         "version": "pdfinfo version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
       }
     },
-    "page_count": 9
+    "page_count": 10
   },
   "status": "fail",
   "pages": [
@@ -81,26 +81,34 @@
     },
     {
       "colored_ratio": 0.21987928161119347,
-      "mid_gray_ratio": 0.07240523875638975,
+      "mid_gray_ratio": 0.0721001904309032,
       "white_corner_ratio": 1.0,
       "solid_gray_tiles": 1188,
       "page": 7,
       "has_text": true
     },
     {
-      "colored_ratio": 0.0,
-      "mid_gray_ratio": 0.05184812182194599,
+      "colored_ratio": 0.21987928161119347,
+      "mid_gray_ratio": 0.07308262547916139,
       "white_corner_ratio": 1.0,
-      "solid_gray_tiles": 0,
+      "solid_gray_tiles": 1106,
       "page": 8,
       "has_text": true
     },
     {
       "colored_ratio": 0.0,
-      "mid_gray_ratio": 0.06512557448898798,
+      "mid_gray_ratio": 0.05785039622637277,
       "white_corner_ratio": 1.0,
       "solid_gray_tiles": 0,
       "page": 9,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.026757897050676153,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 10,
       "has_text": true
     }
   ],
@@ -108,13 +116,15 @@
     "page 4: colored pixels exceed tolerance",
     "page 5: colored pixels exceed tolerance",
     "page 6: colored pixels exceed tolerance",
-    "page 7: colored pixels exceed tolerance"
+    "page 7: colored pixels exceed tolerance",
+    "page 8: colored pixels exceed tolerance"
   ],
   "warnings": [
     "page 4: gray regions require manual screenshot/background review",
     "page 5: gray regions require manual screenshot/background review",
     "page 6: gray regions require manual screenshot/background review",
-    "page 7: gray regions require manual screenshot/background review"
+    "page 7: gray regions require manual screenshot/background review",
+    "page 8: gray regions require manual screenshot/background review"
   ],
   "manual_review": "pending",
   "scope": "Color, white corners and extractable text; source also checks images and gray regions. Not final acceptance.",

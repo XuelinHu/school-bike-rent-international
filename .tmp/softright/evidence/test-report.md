@@ -2,7 +2,7 @@
 
 ## 版本
 
-- Windows、Linux 与 GitHub 提交：`c0e7c711af719d6eae192fdae7e9b8e9fec5b06f`
+- Windows、Linux 与 GitHub：`main` 分支最终验收版本，提交号以验收时 `HEAD` 为准。
 - Linux 项目：`/ds1/workspace/front/school-bike-rent-international`
 - Android 设备：`9d3ed915`
 

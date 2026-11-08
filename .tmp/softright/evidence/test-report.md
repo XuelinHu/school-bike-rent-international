@@ -39,6 +39,7 @@
 | `admin-dashboard.png` | PC 浏览器桌面视口 | 管理台菜单和统计 |
 | `android-main-refreshed.png` | Android 真机 | WebView 刷新后的首页 |
 | `android-installed.png` | Android 真机 | 当前源码 release APK 安装后的首页 |
+| `android-final.png` | Android 真机 | 最终提交对应 release APK 安装后的首页 |
 
 ## 未完成项
 

@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "key": {
+    "pdf_sha256": "5b8402e9537148a100124a7754d2b940f6346383fbf22b6bb5407705bf21282b",
+    "checker_sha256": "7c9dfbef9564c2267b994c93a865a20d6b109078ee96a62dce8857511c45604d",
+    "options": {
+      "document_type": "document",
+      "dpi": 96,
+      "color_tolerance": 4,
+      "max_colored_ratio": 1e-05,
+      "max_mid_gray_ratio": 0.08
+    },
+    "tools": {
+      "python": "3.11.14 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 18:30:03) [MSC v.1929 64 bit (AMD64)]",
+      "pillow": "11.1.0",
+      "platform": "win32",
+      "pdftoppm": {
+        "path": "C:\\Users\\De\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdftoppm.EXE",
+        "version": "pdftoppm version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+      },
+      "pdftotext": {
+        "path": "D:\\texlive\\2025\\bin\\windows\\pdftotext.EXE",
+        "version": "pdftotext version 25.02.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011 Glyph & Cog, LLC"
+      },
+      "pdfinfo": {
+        "path": "C:\\Users\\De\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdfinfo.EXE",
+        "version": "pdfinfo version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+      }
+    },
+    "page_count": 8
+  },
+  "status": "fail",
+  "pages": [
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.003683009929771595,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 1,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.007237047221929385,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 2,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.026259950519367203,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 3,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.10106520183657036,
+      "mid_gray_ratio": 0.1057317683157968,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 89,
+      "page": 4,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.057713573080382476,
+      "mid_gray_ratio": 0.08538997961110824,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 89,
+      "page": 5,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.046282111383012844,
+      "mid_gray_ratio": 0.06485417119940066,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 80,
+      "page": 6,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0544713131208911,
+      "mid_gray_ratio": 0.11570415695633547,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 92,
+      "page": 7,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.007814620338199902,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 8,
+      "has_text": true
+    }
+  ],
+  "failures": [
+    "page 4: colored pixels exceed tolerance",
+    "page 5: colored pixels exceed tolerance",
+    "page 6: colored pixels exceed tolerance",
+    "page 7: colored pixels exceed tolerance"
+  ],
+  "warnings": [
+    "page 4: gray regions require manual screenshot/background review",
+    "page 5: gray regions require manual screenshot/background review",
+    "page 6: gray regions require manual screenshot/background review",
+    "page 7: gray regions require manual screenshot/background review"
+  ],
+  "manual_review": "pending",
+  "scope": "Color, white corners and extractable text; source also checks images and gray regions. Not final acceptance.",
+  "complete": true
+}

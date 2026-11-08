@@ -1,0 +1,14 @@
+软件名称：国际学生单车租赁系统
+版本号：V1.0
+开发的硬件环境：Windows PC；Linux x86_64 GPU 服务器；Android 真机（型号待补充）
+运行的硬件环境：Windows PC、Linux x86_64 服务器、Android 真机
+开发该软件的操作系统：Windows 与 Linux（具体版本待补充）
+软件开发环境 / 开发工具：Node.js、npm、Vue 3、Vite、Express、PostgreSQL、Android Gradle Plugin
+该软件的运行平台 / 操作系统：现代桌面浏览器、Android WebView、Linux Node.js 运行时
+软件运行支撑环境 / 支持软件：PostgreSQL 16/18、Ollama（已验证 qwen3:8b）、PM2（Linux 部署）
+编程语言：JavaScript、Vue SFC、SQL、Java、Kotlin DSL
+源程序量：以本次源码选择清单统计为准，未包含 node_modules、构建产物和第三方代码
+开发目的：为国际学生校园单车租赁提供车辆查询、租赁归还、公告和管理维护功能，并提供受角色约束的业务问答助手。
+面向行业 / 领域：校园交通与学生服务
+软件的主要功能：用户注册登录；车辆、站点和公告浏览；学生租车还车与订单查询；管理员管理用户、车辆、订单、站点、维护、公告和车型；Ollama 业务助手；Android 局域网 WebView 访问。
+软件的技术特点：Vue 3 与 Express 分层；PostgreSQL 事务和约束保护租赁状态；JWT 登录与角色授权；Vite 同源代理；AI 工具按角色裁剪并在服务端复核；Android 客户端复用同一 H5 页面。

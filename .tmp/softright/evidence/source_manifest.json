@@ -1,0 +1,132 @@
+[
+  {
+    "path": "backend/src/server.js",
+    "sha256": "0054d596dbd16f75dca78c50f0fdf29a159e1c53e0782900822e00783fca65e2",
+    "bytes": 237
+  },
+  {
+    "path": "backend/src/app.js",
+    "sha256": "0303eef6192a0faf25b16e92913fc6cd691fa6bc6ee5d578f18855e0eff0a4af",
+    "bytes": 1642
+  },
+  {
+    "path": "backend/src/config/db.js",
+    "sha256": "de5bd8166b1542dd7faa600902fff87cff9333dfedf471a3ea0c2cc26f5150f3",
+    "bytes": 3467
+  },
+  {
+    "path": "backend/src/middleware/auth.js",
+    "sha256": "901ee85dc54c4610643a4b651d85af2d01a161d029b4ed5f76a64f392fec8743",
+    "bytes": 581
+  },
+  {
+    "path": "backend/src/middleware/role.js",
+    "sha256": "ade1eac53481655c8f23c081dd32071e1e38397cc176d24dd1d6f450b2fe8d2f",
+    "bytes": 254
+  },
+  {
+    "path": "backend/src/routes/auth.js",
+    "sha256": "d554a7afa534a1b77b5e04d959a2cadded4e8a00c7ee19f105e9e33e9ef3c0cc",
+    "bytes": 10809
+  },
+  {
+    "path": "backend/src/routes/bikes.js",
+    "sha256": "bc81017c8e03da9e5450464defa224dbc4a0e5a92f54776126a018eb2332884e",
+    "bytes": 3821
+  },
+  {
+    "path": "backend/src/routes/orders.js",
+    "sha256": "7660b782288511fec8f5262895892b0373c6484a155dc03d2766a952658db5d3",
+    "bytes": 5322
+  },
+  {
+    "path": "backend/src/routes/stations.js",
+    "sha256": "d7d3283f18bcfab749af619ae9d56dd376a88f9837175aae0aaaa431221cd209",
+    "bytes": 4278
+  },
+  {
+    "path": "backend/src/routes/ai.js",
+    "sha256": "bd3c09258622d69d65d2c86ec3b15be254b1d24fa9f0648a72991dc2770c1591",
+    "bytes": 6827
+  },
+  {
+    "path": "backend/src/ai/agent.js",
+    "sha256": "74669cf44672ef20e95c25abaed8872e90ef71791f818594ca456ee028219d7d",
+    "bytes": 7105
+  },
+  {
+    "path": "backend/src/ai/provider/base.js",
+    "sha256": "3a2644f3af0af4dec2c154500c25de4d8780221c7bef2c5565eedf160fd2e4d4",
+    "bytes": 6220
+  },
+  {
+    "path": "backend/src/ai/provider/ollama.js",
+    "sha256": "720ffbf6b961d8c34e5dccde65425b95bf2a43a9d9f392adb0094b454ecfcc0b",
+    "bytes": 11116
+  },
+  {
+    "path": "backend/src/ai/tools/index.js",
+    "sha256": "2d4bc971f83fb36602f0d3dbf888dbe1aae837cba60fa4e5d865d0485d4d1213",
+    "bytes": 17055
+  },
+  {
+    "path": "frontend/src/App.vue",
+    "sha256": "ae02acc453af7a354fbb7d2517e25632e52e6faf420a2caddcaac13f0724aa45",
+    "bytes": 2167
+  },
+  {
+    "path": "frontend/src/router/index.js",
+    "sha256": "2194fde3b198127bb93908eb8e7309122609591c9bee9363154e9d27c3afc7a4",
+    "bytes": 3369
+  },
+  {
+    "path": "frontend/src/stores/auth.js",
+    "sha256": "934d47dbd2553075dd2a17975324bf4a15c848e6eb90b578048c13692caf8882",
+    "bytes": 1083
+  },
+  {
+    "path": "frontend/src/stores/ai.js",
+    "sha256": "454765c730ce853b18facc71e0ae09474dadaaef6bc3d27e40b8907f4055f550",
+    "bytes": 7515
+  },
+  {
+    "path": "frontend/src/components/ChatWidget.vue",
+    "sha256": "d5c9cf8f6ae625b37a931adcd163893f652f5c122e98c982d607d0c0ec86879a",
+    "bytes": 11233
+  },
+  {
+    "path": "frontend/src/views/Login.vue",
+    "sha256": "79d91817604e5eeb4d7d4c4d4ca8cfca557862342e5315f2bcca53b84c6497fc",
+    "bytes": 3107
+  },
+  {
+    "path": "frontend/src/views/Bikes.vue",
+    "sha256": "ea2e8d2aac457f7e7bd08a8ac46c34176b249445fbd4e56151140601c692145a",
+    "bytes": 2812
+  },
+  {
+    "path": "frontend/src/views/Orders.vue",
+    "sha256": "0f108366307ac8705193d0e13f9d00ef1d2e5f6f832ac4445d2ad4e58d22bf96",
+    "bytes": 3001
+  },
+  {
+    "path": "frontend/src/assets/style.css",
+    "sha256": "cf6ef553631a90c129d14dd32e6037236cb9c310ea948d1bc329e5778e864abe",
+    "bytes": 11845
+  },
+  {
+    "path": "android/app/src/main/java/com/xuelinhu/lanwebclient/MainActivity.java",
+    "sha256": "15934e04ef320e34a046177debc5be67c1d1351dfe6d89dd134498f0a071a9e4",
+    "bytes": 10528
+  },
+  {
+    "path": "backend/postgres/schema.sql",
+    "sha256": "6b1ac542a66c334f019ee1f023f0d2cc3a002a4e0b452e01c49eef1328f2d05c",
+    "bytes": 4717
+  },
+  {
+    "path": "backend/postgres/migrations/005_models_payments_i18n.js",
+    "sha256": "59f4cd92f876087f1f70c834291502c5230f58e7350b0cd9704c847a5fef630c",
+    "bytes": 3865
+  }
+]

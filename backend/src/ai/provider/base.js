@@ -99,14 +99,21 @@ export function parseToolArguments(raw) {
  */
 export function stripThinking(text) {
   if (!text) return '';
+  const value = String(text);
+  // Some Ollama builds emit the reasoning body without its opening tag and
+  // only append `</think>` at the end. In that case the whole prefix is still
+  // internal reasoning and must not reach the client.
+  const close = value.match(/<\/?think(?:ing)?>|<｜end▁of▁thinking｜>/i);
+  if (close && /^<\//.test(close[0])) return value.slice(close.index + close[0].length);
   // ⚠️ 这里**绝对不能 trim()**。这个函数的入参是**流式分片**，不是完整回答：
   // 英文分片长这样 ["This", " system", " lets", " students"]，词与词之间的那个空格
   // 就在分片开头。trim 掉之后拼出来是 "Thissystemletsstudents" —— 中文看不出问题，
   // 英文会被粘成一坨，而这个回答是要交给 TTS 朗读的。
   // 需要判断"是不是空内容"的调用方自己 trim。
-  return String(text)
+  return value
     .replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '')
-    .replace(/<think(?:ing)?>[\s\S]*$/i, '');
+    .replace(/<think(?:ing)?>[\s\S]*$/i, '')
+    .replace(/<｜end▁of▁thinking｜>/gi, '');
 }
 
 /**

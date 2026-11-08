@@ -1,0 +1,388 @@
+{
+  "schema_version": 1,
+  "key": {
+    "pdf_sha256": "b744573e5d3c1ffb4c3a3dbac8d3eba383df37eef403b3ac2758b49d2f978c00",
+    "checker_sha256": "7c9dfbef9564c2267b994c93a865a20d6b109078ee96a62dce8857511c45604d",
+    "options": {
+      "document_type": "source",
+      "dpi": 96,
+      "color_tolerance": 4,
+      "max_colored_ratio": 1e-05,
+      "max_mid_gray_ratio": 0.08
+    },
+    "tools": {
+      "python": "3.11.14 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 18:30:03) [MSC v.1929 64 bit (AMD64)]",
+      "pillow": "11.1.0",
+      "platform": "win32",
+      "pdftoppm": {
+        "path": "C:\\Users\\De\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdftoppm.EXE",
+        "version": "pdftoppm version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+      },
+      "pdftotext": {
+        "path": "D:\\texlive\\2025\\bin\\windows\\pdftotext.EXE",
+        "version": "pdftotext version 25.02.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011 Glyph & Cog, LLC"
+      },
+      "pdfinfo": {
+        "path": "C:\\Users\\De\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdfinfo.EXE",
+        "version": "pdfinfo version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+      },
+      "pdfimages": {
+        "path": "D:\\texlive\\2025\\bin\\windows\\pdfimages.EXE",
+        "version": "pdfimages version 25.02.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011 Glyph & Cog, LLC"
+      }
+    },
+    "page_count": 43
+  },
+  "status": "pass",
+  "pages": [
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.003642635886692491,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 1,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03137623897844699,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 2,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.025629666846854526,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 3,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.039712357373085316,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 4,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.028317905215204865,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 5,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03158708120341564,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 6,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.053870188479491106,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 7,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.040934793677424856,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 8,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.043961725407161006,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 9,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.039660768318039795,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 10,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.04887614365084528,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 11,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.041829751632344994,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 12,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.026602008384342946,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 13,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.023477506050498954,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 14,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.02852986894137016,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 15,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.024620315769876926,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 16,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.02848613039470113,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 17,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.02898519842720672,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 18,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.022394135894542998,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 19,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.025843873575413106,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 20,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.029726510718186935,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 21,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.02763491098645002,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 22,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03438634819023352,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 23,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03255045073133093,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 24,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03380428906917644,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 25,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.05037446924955869,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 26,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.028436784342048892,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 27,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.02190179686921726,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 28,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.022626286642247848,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 29,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.031156424743905203,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 30,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.025404245106329527,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 31,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.02387788197770007,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 32,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.023262177820743735,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 33,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.04229405312775469,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 34,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03976170342573756,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 35,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.056348706124069434,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 36,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.049132967424876245,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 37,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.04619351278847814,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 38,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.046851833990906866,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 39,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.04128582355197373,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 40,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.03718897968064132,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 41,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.05573748797189967,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 42,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.044892571400373685,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 43,
+      "has_text": true
+    }
+  ],
+  "failures": [],
+  "warnings": [],
+  "manual_review": "pending",
+  "scope": "Color, white corners and extractable text; source also checks images and gray regions. Not final acceptance.",
+  "complete": true
+}

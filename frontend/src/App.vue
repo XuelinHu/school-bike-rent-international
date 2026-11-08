@@ -8,7 +8,6 @@
         <router-link v-if="auth.user" to="/orders/current">{{ t('currentOrder') }}</router-link>
         <router-link v-if="auth.user" to="/orders/history">{{ t('history') }}</router-link>
         <router-link to="/announcements">{{ t('announcements') }}</router-link>
-        <a :href="imagegenUrl" target="_blank" rel="noopener noreferrer">AI 绘画</a>
         <router-link v-if="auth.user" to="/profile">{{ t('profile') }}</router-link>
         <router-link v-if="auth.user?.role === 'admin'" to="/admin">{{ t('dashboard') }}</router-link>
         <!-- staff 进不了 /admin（那里是 admin-only 的统计页），给一条直达维护菜单的入口 -->
@@ -39,8 +38,6 @@ import { useRouter } from 'vue-router';
 import { authStore as auth } from './stores/auth.js';
 import { state, t, setLang } from './i18n/index.js';
 import ChatWidget from './components/ChatWidget.vue';
-
-const imagegenUrl = `http://${window.location.hostname}:4050/`;
 
 const router = useRouter();
 function logout() {

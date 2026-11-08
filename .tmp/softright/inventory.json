@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "metadata": {
+    "software_name": "国际学生单车租赁系统",
+    "short_name": "学生单车租赁",
+    "version": "V1.0",
+    "scope": "school-bike-rent-international",
+    "source_commit": "0d287fe4656cd56cf7849cb513294cbfcb89ff9e"
+  },
+  "facts": [
+    {"id":"stack","fact":"Vue 3 + Vite 前端，Node.js + Express 后端，PostgreSQL 数据库。","evidence":["frontend/package.json","backend/package.json","backend/src/config/db.js"],"status":"confirmed"},
+    {"id":"roles","fact":"代码和数据库实际角色为 student、admin、staff。","evidence":["backend/postgres/schema.sql:8","backend/src/routes/users.js:13","frontend/src/router/index.js:40"],"status":"confirmed"},
+    {"id":"rental","fact":"学生或管理员可租车、还车；事务先锁用户再锁车辆，并由数据库部分唯一索引限制活动订单。","evidence":["backend/src/routes/orders.js:61","backend/src/routes/orders.js:91","backend/postgres/migrations/002_concurrency_guard.js"],"status":"confirmed"},
+    {"id":"admin","fact":"管理员可管理用户、车辆、订单、站点、维护、公告、车型和 AI 模型。","evidence":["frontend/src/router/index.js:34-44","frontend/src/views/Dashboard.vue","frontend/src/config/adminSchemas.js"],"status":"confirmed"},
+    {"id":"ai","fact":"登录用户可使用 Ollama/OpenAI 兼容模型的流式业务助手；工具按角色裁剪并在执行层复核。","evidence":["backend/src/routes/ai.js","backend/src/ai/agent.js","backend/src/ai/tools/index.js","frontend/src/components/ChatWidget.vue"],"status":"confirmed"},
+    {"id":"android","fact":"Android 客户端是加载局域网网页服务的原生 WebView，包名为 com.xuelinhu.bikerental。","evidence":["android/app/build.gradle.kts","android/app/src/main/java/com/xuelinhu/lanwebclient/MainActivity.java",".tmp/softright/screenshots/android-main-refreshed.png"],"status":"confirmed"},
+    {"id":"deployment","fact":"Windows 和 Linux 使用 4030 网页端口、8032 API 端口；Linux 通过 PM2 运行 bike-backend 与 school-bike-rental-web。","evidence":["PORTS.md","backend/src/server.js","frontend/vite.config.js","runtime evidence 2026-11-08"],"status":"confirmed"}
+  ],
+  "pages": [
+    {"path":"/","role":"guest/student/admin","status":"verified","evidence":".tmp/softright/screenshots/mobile-home.png"},
+    {"path":"/login","role":"guest","status":"verified","evidence":".tmp/softright/screenshots/mobile-login-final.png"},
+    {"path":"/bikes","role":"student/admin","status":"verified","evidence":".tmp/softright/screenshots/student-bikes.png"},
+    {"path":"/admin","role":"admin","status":"verified","evidence":".tmp/softright/screenshots/admin-dashboard.png"},
+    {"path":"Android WebView home","role":"student/admin","status":"verified","evidence":".tmp/softright/screenshots/android-main-refreshed.png"}
+  ],
+  "tests": [
+    {"name":"backend unit tests","result":"25 passed","evidence":"command npm test"},
+    {"name":"frontend production build","result":"passed","evidence":"command npm run build"},
+    {"name":"student/admin permission checks","result":"student bikes/current 200, student users 403, admin users/dashboard/maintenance 200","evidence":"runtime API check"},
+    {"name":"rental lifecycle","result":"rent then return completed, order id 1","evidence":"runtime API check"},
+    {"name":"AI business assistant","result":"qwen3:8b returned final answer without visible reasoning","evidence":"Playwright session bike, remote Ollama"}
+  ],
+  "gaps": [
+    "教师角色和普通用户角色不存在于当前 users 约束与路由授权中。",
+    "当前代码未发现图片上传识别、语音识别或语音合成服务的完整业务链证据；浏览器公网 HTTP 下麦克风不可用。",
+    "Android 安装版本与最新网页代码依赖 WebView 刷新，尚未重新构建并安装新的 APK。",
+    "完整用户手册的每个页面、异常状态和全流程双图证据尚未全部采集。",
+    "完整设计说明书正文页数与 PDF 版式尚未完成终检。"
+  ],
+  "assets": [],
+  "source_files": [],
+  "scan": {"last_prepared_by":"software-user-manual/prepare_manual.py"}
+}

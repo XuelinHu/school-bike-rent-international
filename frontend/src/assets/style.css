@@ -81,9 +81,14 @@ th, td { border-bottom: 1px solid #e7ebf0; padding: 10px; text-align: left; vert
 
 @media (max-width: 680px) {
   .topbar { align-items: flex-start; flex-direction: column; }
+  .dev-test-account { display: none; }
   .toolbar a, .toolbar button, .toolbar select { padding: 7px 8px; font-size: 13px; }
   th, td { padding: 8px 6px; font-size: 12px; }
   .pager { justify-content: center; }
+  .content { padding: 12px; }
+  .content h1 { margin-top: 4px; font-size: 24px; }
+  .card { padding: 12px; }
+  .card p { margin: 6px 0 0; font-size: 13px; }
 }
 
 /* ─────────────────── 智能助手：悬浮球 + 面板 ─────────────────── */

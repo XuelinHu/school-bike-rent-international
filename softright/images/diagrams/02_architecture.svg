@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820"><rect width="100%" height="100%" fill="#f4f1e8"/><text x="60" y="64" font-size="36" font-weight="bold" font-family="Microsoft YaHei,Arial" fill="#24332d">系统架构图</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#24332d"/></marker></defs>
+<g><rect x="70" y="170" width="300" height="110" rx="14" fill="#3f7656" stroke="#24332d" stroke-width="3"/><text x="220.0" y="212" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">Android WebView</text></g>
+<g><rect x="70" y="350" width="300" height="110" rx="14" fill="#3f7656" stroke="#24332d" stroke-width="3"/><text x="220.0" y="392" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">浏览器 / H5</text></g>
+<g><rect x="470" y="190" width="330" height="110" rx="14" fill="#b85c38" stroke="#24332d" stroke-width="3"/><text x="635.0" y="232" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">Vue Router + Views</text></g>
+<g><rect x="470" y="390" width="330" height="110" rx="14" fill="#b85c38" stroke="#24332d" stroke-width="3"/><text x="635.0" y="432" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">Express Routes</text></g>
+<g><rect x="470" y="590" width="330" height="110" rx="14" fill="#3f7656" stroke="#24332d" stroke-width="3"/><text x="635.0" y="632" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">AI Agent + Tools</text></g>
+<g><rect x="950" y="190" width="300" height="110" rx="14" fill="#b85c38" stroke="#24332d" stroke-width="3"/><text x="1100.0" y="232" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">PostgreSQL</text></g>
+<g><rect x="950" y="390" width="300" height="110" rx="14" fill="#3f7656" stroke="#24332d" stroke-width="3"/><text x="1100.0" y="432" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">JWT / Role Guard</text></g>
+<g><rect x="950" y="590" width="300" height="110" rx="14" fill="#3f7656" stroke="#24332d" stroke-width="3"/><text x="1100.0" y="632" text-anchor="middle" font-size="26" font-family="Microsoft YaHei,Arial" fill="#fff">Ollama Models</text></g>
+<path d="M370 220 L470 240" stroke="#24332d" stroke-width="4" marker-end="url(#arrow)"/>
+<path d="M370 400 L470 440" stroke="#24332d" stroke-width="4" marker-end="url(#arrow)"/>
+<path d="M800 240 L950 240" stroke="#24332d" stroke-width="4" marker-end="url(#arrow)"/>
+<path d="M800 440 L950 440" stroke="#24332d" stroke-width="4" marker-end="url(#arrow)"/>
+<path d="M800 640 L950 640" stroke="#24332d" stroke-width="4" marker-end="url(#arrow)"/>
+</svg>

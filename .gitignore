@@ -3,6 +3,8 @@ dist/
 .env.local
 *.log
 .playwright-mcp/
+.playwright-cli/
+output/
 docs/output/check*/
 docs/output/source_pdf_text.txt
 

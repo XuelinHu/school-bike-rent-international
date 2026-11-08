@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "key": {
+    "pdf_sha256": "9ec3a839c8a2fb104eb5a8ddefc3af1a52b9bfd661b82c10ee84eb1ecf2bc00e",
+    "checker_sha256": "7c9dfbef9564c2267b994c93a865a20d6b109078ee96a62dce8857511c45604d",
+    "options": {
+      "document_type": "document",
+      "dpi": 96,
+      "color_tolerance": 4,
+      "max_colored_ratio": 1e-05,
+      "max_mid_gray_ratio": 0.08
+    },
+    "tools": {
+      "python": "3.11.14 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 18:30:03) [MSC v.1929 64 bit (AMD64)]",
+      "pillow": "11.1.0",
+      "platform": "win32",
+      "pdftoppm": {
+        "path": "C:\\Users\\De\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdftoppm.EXE",
+        "version": "pdftoppm version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+      },
+      "pdftotext": {
+        "path": "D:\\texlive\\2025\\bin\\windows\\pdftotext.EXE",
+        "version": "pdftotext version 25.02.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011 Glyph & Cog, LLC"
+      },
+      "pdfinfo": {
+        "path": "C:\\Users\\De\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdfinfo.EXE",
+        "version": "pdfinfo version 26.07.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+      }
+    },
+    "page_count": 9
+  },
+  "status": "fail",
+  "pages": [
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.004305443093907781,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 1,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.006947699913195807,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 2,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.04119610345624239,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 3,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.21987928161119347,
+      "mid_gray_ratio": 0.0833836139703161,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 1048,
+      "page": 4,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.21987928161119347,
+      "mid_gray_ratio": 0.07832788657585497,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 1014,
+      "page": 5,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.21987928161119347,
+      "mid_gray_ratio": 0.07465721315924644,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 1096,
+      "page": 6,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.21987928161119347,
+      "mid_gray_ratio": 0.07240523875638975,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 1188,
+      "page": 7,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.05184812182194599,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 8,
+      "has_text": true
+    },
+    {
+      "colored_ratio": 0.0,
+      "mid_gray_ratio": 0.06512557448898798,
+      "white_corner_ratio": 1.0,
+      "solid_gray_tiles": 0,
+      "page": 9,
+      "has_text": true
+    }
+  ],
+  "failures": [
+    "page 4: colored pixels exceed tolerance",
+    "page 5: colored pixels exceed tolerance",
+    "page 6: colored pixels exceed tolerance",
+    "page 7: colored pixels exceed tolerance"
+  ],
+  "warnings": [
+    "page 4: gray regions require manual screenshot/background review",
+    "page 5: gray regions require manual screenshot/background review",
+    "page 6: gray regions require manual screenshot/background review",
+    "page 7: gray regions require manual screenshot/background review"
+  ],
+  "manual_review": "pending",
+  "scope": "Color, white corners and extractable text; source also checks images and gray regions. Not final acceptance.",
+  "complete": true
+}

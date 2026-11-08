@@ -5,7 +5,7 @@ CREATE TABLE users (
   name VARCHAR(100),
   email VARCHAR(120),
   phone VARCHAR(30),
-  role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('user', 'student', 'teacher', 'admin', 'staff')),
+  role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'admin', 'staff')),
   student_no VARCHAR(50),
   nationality VARCHAR(80),
   language VARCHAR(20) DEFAULT 'zh-CN',

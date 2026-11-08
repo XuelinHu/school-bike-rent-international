@@ -2,7 +2,7 @@
 
 ## 版本
 
-- Windows 与 Linux 提交：`0d287fe4656cd56cf7849cb513294cbfcb89ff9e`
+- Windows、Linux 与 GitHub 提交：`c0e7c711af719d6eae192fdae7e9b8e9fec5b06f`
 - Linux 项目：`/ds1/workspace/front/school-bike-rent-international`
 - Android 设备：`9d3ed915`
 
@@ -15,7 +15,7 @@
 | Linux 网页 | PM2 `school-bike-rental-web` online，监听 `0.0.0.0:4030` |
 | PostgreSQL | Linux PostgreSQL18 容器，项目配置端口 5433，迁移完成 |
 | Ollama | `11434` 可访问，模型目录可读，`qwen3:8b` 业务回答通过 |
-| Android | WebView 刷新后显示移除 AI 绘画入口的页面 |
+| Android | 使用当前源码构建并安装 release APK；WebView 页面显示移除 AI 绘画入口的页面 |
 
 ## 自动化与接口
 
@@ -36,7 +36,8 @@
 | `admin-home.png` | PC 浏览器桌面视口 | 管理员首页 |
 | `admin-dashboard.png` | PC 浏览器桌面视口 | 管理台菜单和统计 |
 | `android-main-refreshed.png` | Android 真机 | WebView 刷新后的首页 |
+| `android-installed.png` | Android 真机 | 当前源码 release APK 安装后的首页 |
 
 ## 未完成项
 
-教师/普通用户角色、图片识别、完整语音识别与语音合成、APK 重建安装、所有页面和异常状态截图仍待补齐。相关文档只能标记为“草稿/需人工确认”。
+教师/普通用户角色、图片识别、完整语音识别与语音合成、所有页面和异常状态截图仍待补齐。相关文档只能标记为“草稿/需人工确认”。

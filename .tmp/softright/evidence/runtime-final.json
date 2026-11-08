@@ -1,0 +1,35 @@
+{
+  "commit": "main (HEAD recorded at final verification)",
+  "windows": {
+    "api_health": 200,
+    "web": 200,
+    "linux_api_port": 8032,
+    "linux_web_port": 4030
+  },
+  "linux": {
+    "git_status": "clean",
+    "pm2": {
+      "bike-backend": "online",
+      "school-bike-rental-web": "online"
+    },
+    "api_health": 200,
+    "web": 200,
+    "postgres_migration": "006_user_teacher_roles applied",
+    "skills_directory_count": 29
+  },
+  "roles": {
+    "user": {"login": 200, "bikes": 200, "current_order": 200, "users_admin_api": 403},
+    "student": {"login": 200, "bikes": 200, "current_order": 200, "users_admin_api": 403},
+    "teacher": {"login": 200, "bikes": 200, "current_order": 200, "users_admin_api": 403},
+    "admin": {"login": 200, "bikes": 200, "current_order": 200, "users_admin_api": 200}
+  },
+  "rental": {"role": "user", "rent": "renting", "return": "completed", "order_id": 2},
+  "ai": {"provider": "ollama", "default_model": "qwen3:8b", "models_endpoint": 200, "final_answer_only": true},
+  "android": {"serial": "9d3ed915", "release_build": "success", "install": "success", "screenshot": "android-final.png"},
+  "automated_tests": {"backend_unit": {"passed": 25, "failed": 0}, "frontend_build": "success"},
+  "known_scope": [
+    "图片识别完整业务链未实现",
+    "语音识别和语音合成在当前局域网 HTTP WebView 中未形成完整闭环",
+    "未采集所有页面和异常状态截图"
+  ]
+}

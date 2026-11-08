@@ -14,7 +14,9 @@ files = [
     'frontend/src/stores/ai.js', 'frontend/src/components/ChatWidget.vue', 'frontend/src/views/Login.vue',
     'frontend/src/views/Bikes.vue', 'frontend/src/views/Orders.vue', 'frontend/src/assets/style.css',
     'android/app/src/main/java/com/xuelinhu/lanwebclient/MainActivity.java',
-    'backend/postgres/schema.sql', 'backend/postgres/migrations/005_models_payments_i18n.js'
+    'android/app/src/main/java/com/xuelinhu/lanwebclient/VoiceBridge.java',
+    'backend/postgres/schema.sql', 'backend/postgres/migrations/005_models_payments_i18n.js',
+    'backend/postgres/migrations/006_user_teacher_roles.js'
 ]
 lines = ['# 国际学生单车租赁系统源代码', '', '## 目录', '', '1. 源码选择说明']
 for i, f in enumerate(files, 2):

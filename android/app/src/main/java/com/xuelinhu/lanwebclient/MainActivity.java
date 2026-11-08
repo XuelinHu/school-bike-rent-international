@@ -17,6 +17,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.JavascriptInterface;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -28,6 +29,7 @@ public final class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar progressBar;
     private PermissionRequest pendingPermissionRequest;
+    private VoiceBridge voiceBridge;
     private String serverUrl;
 
     @Override
@@ -79,6 +81,9 @@ public final class MainActivity extends Activity {
         root.addView(webView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
         setContentView(root);
+
+        voiceBridge = new VoiceBridge(this, webView);
+        webView.addJavascriptInterface(voiceBridge, "SchoolBikeBridge");
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -152,6 +157,11 @@ public final class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == VoiceBridge.AUDIO_PERMISSION_REQUEST) {
+            voiceBridge.onAudioPermissionResult(grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED);
+            return;
+        }
         if (requestCode == AUDIO_PERMISSION_REQUEST && pendingPermissionRequest != null) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 pendingPermissionRequest.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
@@ -228,6 +238,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (voiceBridge != null) voiceBridge.destroy();
         if (webView != null) webView.destroy();
         super.onDestroy();
     }

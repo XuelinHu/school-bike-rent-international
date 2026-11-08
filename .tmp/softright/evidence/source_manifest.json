@@ -116,8 +116,13 @@
   },
   {
     "path": "android/app/src/main/java/com/xuelinhu/lanwebclient/MainActivity.java",
-    "sha256": "15934e04ef320e34a046177debc5be67c1d1351dfe6d89dd134498f0a071a9e4",
-    "bytes": 10528
+    "sha256": "893146a56789b620431a46ba3e328f3ed18c9e96fa254fe18cd4dfbd8cb75fde",
+    "bytes": 11039
+  },
+  {
+    "path": "android/app/src/main/java/com/xuelinhu/lanwebclient/VoiceBridge.java",
+    "sha256": "90ab3766cbc8597d99553fdc68e02611da166075800c9d728041b99bcdf8028b",
+    "bytes": 8501
   },
   {
     "path": "backend/postgres/schema.sql",
@@ -128,5 +133,10 @@
     "path": "backend/postgres/migrations/005_models_payments_i18n.js",
     "sha256": "59f4cd92f876087f1f70c834291502c5230f58e7350b0cd9704c847a5fef630c",
     "bytes": 3865
+  },
+  {
+    "path": "backend/postgres/migrations/006_user_teacher_roles.js",
+    "sha256": "3700f80dcd33424d3ad4871a00492f3513eb4fd108ce149f30f03630a7fef036",
+    "bytes": 405
   }
 ]

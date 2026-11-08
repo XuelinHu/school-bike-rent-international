@@ -27,6 +27,8 @@
 - 角色联调：`user01`、`student01`、`teacher01` 登录、车辆和个人订单均 200，用户管理 403；`admin01` 四项均 200。
 - 普通用户租赁链路：`user01` 创建订单 `renting`，归还后 `completed`。
 - AI：使用 `qwen3:8b` 查询站点，界面只显示最终回答，不显示内部推理。
+- AI 流式接口：教师账号调用 `/api/ai/chat` 返回工具调用、工具结果、最终文本、usage 和 done 事件，HTTP 200。
+- Android 语音桥：release APK 构建成功；真机点击语音按钮后出现 `RECORD_AUDIO` 系统授权弹窗，授权后进入 `Listening` 状态；原生桥通过 `SpeechRecognizer`/`TextToSpeech` 回调 H5。实际口述内容仍需人工在手机上完成。
 
 ## 截图索引
 
@@ -40,7 +42,9 @@
 | `android-main-refreshed.png` | Android 真机 | WebView 刷新后的首页 |
 | `android-installed.png` | Android 真机 | 当前源码 release APK 安装后的首页 |
 | `android-final.png` | Android 真机 | 最终提交对应 release APK 安装后的首页 |
+| `android-voice-permission.png` | Android 真机 | 麦克风权限系统弹窗 |
+| `android-voice-listening.png` | Android 真机 | 授权后的语音状态回退截图 |
 
 ## 未完成项
 
-图片识别、完整语音识别与语音合成、所有页面和异常状态截图仍待补齐。相关文档只能标记为“草稿/需人工确认”。
+图片识别、实际口述内容的完整语音闭环、所有页面和异常状态截图仍待补齐。相关文档只能标记为“草稿/需人工确认”。

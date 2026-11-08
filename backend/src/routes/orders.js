@@ -58,7 +58,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   ok(res, order);
 }));
 
-router.post('/rent', allow('student', 'admin'), asyncHandler(async (req, res) => {
+router.post('/rent', allow('user', 'student', 'teacher', 'admin'), asyncHandler(async (req, res) => {
   const { bike_id, start_station_id } = req.body;
   let order;
   try {
@@ -88,7 +88,7 @@ router.post('/rent', allow('student', 'admin'), asyncHandler(async (req, res) =>
   ok(res, order, 'rented');
 }));
 
-router.put('/:id/return', allow('student', 'admin'), asyncHandler(async (req, res) => {
+router.put('/:id/return', allow('user', 'student', 'teacher', 'admin'), asyncHandler(async (req, res) => {
   const { end_station_id } = req.body;
   const result = await tx(async (conn) => {
     const [orders] = await conn.execute(`SELECT * FROM rental_orders WHERE id=? FOR UPDATE`, [req.params.id]);

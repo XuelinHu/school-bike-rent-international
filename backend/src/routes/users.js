@@ -10,7 +10,7 @@ import { parsePaging, paginateRows, escapeLike, whereBuilder } from '../utils/pa
 const router = Router();
 router.use(auth(), allow('admin'));
 
-const ROLES = ['student', 'admin', 'staff'];
+const ROLES = ['user', 'student', 'teacher', 'admin', 'staff'];
 const STATUSES = ['active', 'disabled'];
 
 // 明确列出可返回的列，不用 SELECT *：password 哈希绝不能出现在任何响应里

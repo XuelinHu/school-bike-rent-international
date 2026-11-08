@@ -65,7 +65,7 @@ export function calcFare(hourlyRate, hours) {
 const TOOLS = {
   // ─────────────────────────── 通用 ───────────────────────────
   get_my_current_order: {
-    roles: ['student', 'admin', 'staff'],
+    roles: ['user', 'student', 'teacher', 'admin', 'staff'],
     description: '查询"我"当前正在进行中的租借订单（状态为 renting）。用户问"我现在租的什么车""我还有没有没还的车"时用这个。不需要任何参数。',
     parameters: { type: 'object', properties: {} },
     async run(_args, ctx) {
@@ -98,7 +98,7 @@ const TOOLS = {
   },
 
   get_my_orders: {
-    roles: ['student', 'admin', 'staff'],
+    roles: ['user', 'student', 'teacher', 'admin', 'staff'],
     description: '查询"我"的历史订单列表（含已完成和进行中的）。用户问"我租过几次""我上次花了多少钱"时用这个。',
     parameters: {
       type: 'object',
@@ -122,7 +122,7 @@ const TOOLS = {
   },
 
   list_stations: {
-    roles: ['student', 'admin', 'staff'],
+    roles: ['user', 'student', 'teacher', 'admin', 'staff'],
     description: '列出所有站点，以及每个站点当前可租的车辆数。用户问"有哪些站点""哪个站有车"时用这个。',
     parameters: { type: 'object', properties: {} },
     async run() {
@@ -143,7 +143,7 @@ const TOOLS = {
   },
 
   get_bike_info: {
-    roles: ['student', 'admin', 'staff'],
+    roles: ['user', 'student', 'teacher', 'admin', 'staff'],
     description: '按车辆编号查询某一辆车的信息：车型、状态、所在站点、小时费率。用户报出一个车牌号问"这车在哪""这车多少钱一小时"时用这个。',
     parameters: {
       type: 'object',
@@ -166,7 +166,7 @@ const TOOLS = {
   },
 
   estimate_rental_cost: {
-    roles: ['student', 'admin', 'staff'],
+    roles: ['user', 'student', 'teacher', 'admin', 'staff'],
     description: '估算租车费用。用户问"骑 3 小时多少钱""租一天要多少"时用这个。注意计费规则是不足 1 小时按 1 小时、且向上取整。',
     parameters: {
       type: 'object',
@@ -213,7 +213,7 @@ const TOOLS = {
   },
 
   list_announcements: {
-    roles: ['student', 'admin', 'staff'],
+    roles: ['user', 'student', 'teacher', 'admin', 'staff'],
     description: '查看公告。普通用户只能看到已发布的公告；管理员能看到全部（含已隐藏）。',
     parameters: {
       type: 'object',

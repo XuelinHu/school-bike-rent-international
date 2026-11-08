@@ -6,6 +6,8 @@ const passwords = assertDemoSeedAllowed();
 const demoUsers = [
   ['admin', passwords.admin, '系统管理员', 'admin', 'admin@example.local', '13800000000', null, 'China'],
   ['student', passwords.student, '张同学', 'student', 'student@example.local', '13800000001', 'S20260001', 'China'],
+  ['user', passwords.student, '普通用户', 'user', 'user@example.local', '13800000006', null, 'China'],
+  ['teacher', passwords.student, '任课教师', 'teacher', 'teacher@example.local', '13800000007', null, 'China'],
   ['staff', passwords.staff, '维修人员', 'staff', 'staff@example.local', '13800000002', null, 'China'],
   ['lihua', passwords.student, '李华', 'student', 'lihua@example.local', '13800000003', 'S20260002', 'China'],
   ['emma', passwords.student, 'Emma Smith', 'student', 'emma@example.local', '13800000004', 'S20260003', 'United Kingdom'],

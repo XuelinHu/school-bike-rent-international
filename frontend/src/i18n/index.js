@@ -96,7 +96,9 @@ const messages = {
     // 枚举：角色 / 车辆类型 / 各类状态
     // ⚠️ 这些 key 必须**等于数据库里的枚举值**：管理台表格是拿字段原值直接当 key 查的
     // （t(row.role) / t(row.type)），写成 roleAdmin 之类的前缀名会全部回显成英文原文。
+    user: '普通用户',
     student: '学生',
+    teacher: '教师',
     admin: '管理员',
     staff: '维护人员',
     standard: '普通车',
@@ -303,7 +305,9 @@ const messages = {
     title_zh: 'Chinese Title',
     title_en: 'English Title',
 
+    user: 'Ordinary user',
     student: 'Student',
+    teacher: 'Teacher',
     admin: 'Admin',
     staff: 'Staff',
     standard: 'Standard',

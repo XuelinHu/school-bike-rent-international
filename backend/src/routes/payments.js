@@ -31,7 +31,7 @@ router.put('/providers/:provider', allow('admin'), asyncHandler(async (req, res)
   ok(res, { provider, mode: 'mock', enabled, credentialConfigured: false });
 }));
 
-router.post('/orders/:orderId/pay', allow('student', 'admin'), asyncHandler(async (req, res) => {
+router.post('/orders/:orderId/pay', allow('user', 'student', 'teacher', 'admin'), asyncHandler(async (req, res) => {
   const provider = req.body?.provider;
   if (!PROVIDERS.includes(provider)) throw new HttpError(400, 'Select alipay or wechat');
   const result = await tx(async (connection) => {

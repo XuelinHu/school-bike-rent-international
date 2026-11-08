@@ -87,7 +87,7 @@ and you help admins look up operational data. You only know this system; don't p
   // ⚠️ 第 2 条：每次都变的内容，全部堆在这里
   const snapshot = await getSnapshot(L);
   const role = user?.role || 'guest';
-  const roleZh = { admin: '管理员', staff: '维护人员', student: '学生' }[role] || role;
+  const roleZh = { user: '普通用户', student: '学生', teacher: '教师', admin: '管理员', staff: '维护人员' }[role] || role;
   const identity = zh
     ? `【当前用户】用户名：${user?.username || '未登录'}；角色：${roleZh}（${role}）；用户 ID：${user?.id ?? '无'}`
     : `[Current user] username: ${user?.username || 'anonymous'}; role: ${role}; user id: ${user?.id ?? 'none'}`;

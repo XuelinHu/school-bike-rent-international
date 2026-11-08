@@ -24,9 +24,19 @@ const admins = [
   { username: 'admin02', password: 'Admin-02-Bike!2026', name: 'Test Admin 02', email: 'admin02@example.local', phone: '13800000012' }
 ];
 
-for (const account of [...students, ...admins]) {
+const ordinaryUsers = [
+  { username: 'user01', password: 'User-01-Bike!2026', name: 'Test Ordinary User', email: 'user01@example.local', phone: '13700000011' }
+];
+
+const teachers = [
+  { username: 'teacher01', password: 'Teacher-01-Bike!2026', name: 'Test Teacher', email: 'teacher01@example.local', phone: '13700000012' }
+];
+
+for (const account of [...students, ...admins, ...ordinaryUsers, ...teachers]) {
   const hash = await bcrypt.hash(account.password, 10);
-  const role = account.username.startsWith('admin') ? 'admin' : 'student';
+  const role = account.username.startsWith('admin') ? 'admin'
+    : account.username.startsWith('teacher') ? 'teacher'
+      : account.username.startsWith('user') ? 'user' : 'student';
   await pool.execute(
     `INSERT INTO users (username,password,name,email,phone,role,student_no,nationality,language,status)
      VALUES (?,?,?,?,?,?,?,'Development','en-US','active')
@@ -37,7 +47,9 @@ for (const account of [...students, ...admins]) {
   );
 }
 
-console.log(`Seeded ${students.length} student and ${admins.length} admin development login accounts in ${env.PGDATABASE || 'student_bike_rental'}.`);
+console.log(`Seeded ${students.length} student, ${ordinaryUsers.length} ordinary user, ${teachers.length} teacher, and ${admins.length} admin development login accounts in ${env.PGDATABASE || 'student_bike_rental'}.`);
 console.log('Student accounts:', students.map(({ username, password }) => `${username}/${password}`).join(', '));
+console.log('Ordinary user accounts:', ordinaryUsers.map(({ username, password }) => `${username}/${password}`).join(', '));
+console.log('Teacher accounts:', teachers.map(({ username, password }) => `${username}/${password}`).join(', '));
 console.log('Admin accounts:', admins.map(({ username, password }) => `${username}/${password}`).join(', '));
 await pool.end();

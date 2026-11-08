@@ -9,6 +9,12 @@
           <optgroup :label="t('student')">
             <option v-for="account in studentAccounts" :key="account.username" :value="account.username">{{ account.username }}</option>
           </optgroup>
+          <optgroup :label="t('user')">
+            <option v-for="account in userAccounts" :key="account.username" :value="account.username">{{ account.username }}</option>
+          </optgroup>
+          <optgroup :label="t('teacher')">
+            <option v-for="account in teacherAccounts" :key="account.username" :value="account.username">{{ account.username }}</option>
+          </optgroup>
           <optgroup :label="t('admin')">
             <option v-for="account in adminAccounts" :key="account.username" :value="account.username">{{ account.username }}</option>
           </optgroup>
@@ -49,8 +55,11 @@ const adminAccounts = [
   { username: 'admin01', password: 'Admin-01-Bike!2026' },
   { username: 'admin02', password: 'Admin-02-Bike!2026' }
 ];
+const userAccounts = [{ username: 'user01', password: 'User-01-Bike!2026' }];
+const teacherAccounts = [{ username: 'teacher01', password: 'Teacher-01-Bike!2026' }];
 function pickAccount() {
-  const account = [...studentAccounts, ...adminAccounts].find((item) => item.username === selectedAccount.value);
+  const account = [...studentAccounts, ...userAccounts, ...teacherAccounts, ...adminAccounts]
+    .find((item) => item.username === selectedAccount.value);
   if (account) Object.assign(form, { username: account.username, password: account.password });
 }
 onMounted(() => {

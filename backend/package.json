@@ -15,7 +15,8 @@
     "db:backup": "node --env-file-if-exists=.env scripts/pg-backup.mjs backup",
     "db:restore": "node --env-file-if-exists=.env scripts/pg-backup.mjs restore",
     "seed": "node src/utils/seedUsers.js",
-    "seed:demo": "node src/utils/seedDemoData.js"
+    "seed:demo": "node src/utils/seedDemoData.js",
+    "seed:dev-accounts": "node src/utils/seedDevAccounts.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

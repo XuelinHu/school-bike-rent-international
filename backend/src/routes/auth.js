@@ -33,7 +33,8 @@ const oidcLinkLimiter = createLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
 const IDENTITY_MISMATCH = 'Identity information does not match our records';
 
 router.post('/register', asyncHandler(async (req, res) => {
-  const { username, password, name, email, phone, student_no, nationality, language = 'zh-CN' } = req.body;
+  const { username, password, name, email, phone, student_no, nationality, language = 'en-US', model_id } = req.body;
+  if (!['ms-MY', 'en-US', 'vi-VN', 'lo-LA'].includes(language)) throw new HttpError(400, 'Unsupported language');
   if (!username || !password) throw new HttpError(400, 'Username and password are required');
   if (String(username).length < 3) throw new HttpError(400, 'Username must be at least 3 characters');
   if (String(password).length < MIN_PASSWORD_LENGTH) {
@@ -47,9 +48,10 @@ router.post('/register', asyncHandler(async (req, res) => {
   const hash = await bcrypt.hash(password, 10);
   try {
     await pool.execute(
-      `INSERT INTO users (username, password, name, email, phone, role, student_no, nationality, language, status)
-       VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, 'active')`,
-      [username, hash, name || username, email || null, phone || null, student_no || null, nationality || null, language]
+      `INSERT INTO users (username, password, name, email, phone, role, student_no, nationality, language, status, preferred_model_id)
+       VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, 'active',
+         (SELECT id FROM bike_models WHERE id=? AND status='published'))`,
+      [username, hash, name || username, email || null, phone || null, student_no || null, nationality || null, language, model_id || null]
     );
   } catch (err) {
     if (err.code === '23505') throw new HttpError(409, 'Username already exists');
@@ -124,6 +126,7 @@ router.put('/profile', auth(), asyncHandler(async (req, res) => {
   const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [req.user.id]);
   const current = rows[0];
   if (!current) throw new HttpError(404, 'User not found');
+  if (language !== undefined && !['ms-MY', 'en-US', 'vi-VN', 'lo-LA'].includes(language)) throw new HttpError(400, 'Unsupported language');
 
   await pool.execute(
     'UPDATE users SET name=?, email=?, phone=?, nationality=?, language=? WHERE id=?',

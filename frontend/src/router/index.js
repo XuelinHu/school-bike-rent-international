@@ -39,6 +39,7 @@ const routes = [
   // 维护菜单后端是 allow('admin','staff')，前端过去只判 auth，学生能点进来然后吃 403 空表
   { path: '/admin/maintenance', component: AdminList, props: { type: 'maintenance' }, meta: { auth: true, roles: ['admin', 'staff'] } },
   { path: '/admin/announcements', component: AdminList, props: { type: 'announcements' }, meta: { auth: true, admin: true } },
+  { path: '/admin/models', component: AdminList, props: { type: 'models' }, meta: { auth: true, admin: true } },
   // 模型管理是 admin-only：加载/卸载会动整台机器的显存，影响同机其它项目
   { path: '/admin/ai-models', component: AdminAiModels, meta: { auth: true, admin: true } }
 ];

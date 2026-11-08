@@ -66,6 +66,11 @@ const ANNOUNCEMENT_STATUS_OPTIONS = [
   { value: 'hidden', labelKey: 'hidden' }
 ];
 
+const MODEL_STATUS_OPTIONS = [
+  { value: 'published', labelKey: 'published' },
+  { value: 'draft', labelKey: 'draft' }
+];
+
 export const adminSchemas = {
   /* ── 用户 ─────────────────────────────────────────────── */
   users: {
@@ -269,6 +274,30 @@ export const adminSchemas = {
     canEdit: true,
     canDelete: true,
     deleteHintKey: 'deleteAnnouncementHint'
+  },
+
+  models: {
+    titleKey: 'bikeModel',
+    endpoint: '/models',
+    columns: [
+      { key: 'id' }, { key: 'model_key' }, { key: 'name' }, { key: 'preview_type' },
+      { key: 'color' }, { key: 'status', type: 'status' }, { key: 'sort_order' }
+    ],
+    filters: [{ key: 'status', type: 'select', options: MODEL_STATUS_OPTIONS }],
+    form: [
+      { key: 'model_key', type: 'text', required: true },
+      { key: 'name', type: 'text', required: true },
+      { key: 'description', type: 'textarea' },
+      { key: 'preview_type', type: 'select', options: [
+        { value: 'bike-city', labelKey: 'bikeCity' },
+        { value: 'bike-classic', labelKey: 'bikeClassic' },
+        { value: 'bike-sport', labelKey: 'bikeSport' }
+      ], requiredOnCreate: true },
+      { key: 'color', type: 'text', requiredOnCreate: true },
+      { key: 'sort_order', type: 'number', requiredOnCreate: true },
+      { key: 'status', type: 'select', options: MODEL_STATUS_OPTIONS, requiredOnCreate: true }
+    ],
+    canCreate: true, canEdit: true, canDelete: true
   }
 };
 

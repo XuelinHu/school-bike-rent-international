@@ -1,8 +1,8 @@
 import { reactive } from 'vue';
 
-export const state = reactive({
-  lang: localStorage.getItem('lang') || 'zh-CN'
-});
+const supportedLanguages = ['ms-MY', 'en-US', 'vi-VN', 'lo-LA'];
+const savedLanguage = localStorage.getItem('lang');
+export const state = reactive({ lang: supportedLanguages.includes(savedLanguage) ? savedLanguage : 'en-US' });
 
 /**
  * 文案表。两件事必须同时做到，否则界面会出现中英混排：
@@ -49,6 +49,12 @@ const messages = {
     disabled: '停用',
     maintenanceStatus: '维护中',
     language: '语言',
+    devTestAccount: '开发测试账号',
+    bikeModel: '3D 单车模型', selectBikeModel: '选择模型', modelPreview: '3D 模型预览',
+    model_key: '模型标识', preview_type: '预览类型', color: '主题颜色', sort_order: '排序',
+    bikeCity: '城市通勤车', bikeClassic: '校园经典车', bikeSport: '运动混合车', draft: '草稿',
+    payment: '支付', paymentMockNote: '模拟模式：不会发生真实扣款。',
+    payAlipay: '支付宝（模拟）', payWechat: '微信支付（模拟）', paymentSuccess: '模拟支付成功',
     detail: '详情',
     all: '全部',
     create: '新增',
@@ -253,6 +259,12 @@ const messages = {
     disabled: 'Disabled',
     maintenanceStatus: 'Maintenance',
     language: 'Language',
+    devTestAccount: 'Development test account',
+    bikeModel: '3D Bike Models', selectBikeModel: 'Choose a model', modelPreview: '3D model preview',
+    model_key: 'Model key', preview_type: 'Preview type', color: 'Accent color', sort_order: 'Sort order',
+    bikeCity: 'City commuter', bikeClassic: 'Campus classic', bikeSport: 'Sport hybrid', draft: 'Draft',
+    payment: 'Payment', paymentMockNote: 'Mock mode: no real money will be charged.',
+    payAlipay: 'Alipay (mock)', payWechat: 'WeChat Pay (mock)', paymentSuccess: 'Mock payment succeeded',
     detail: 'Detail',
     all: 'All',
     create: 'Create',
@@ -412,11 +424,59 @@ const messages = {
   }
 };
 
+// Keep the application usable in the four supported locales. Untranslated legacy
+// keys fall back to English instead of leaking raw database keys into the UI.
+const extraLocales = {
+  'ms-MY': {
+    app: 'Sewaan Basikal Pelajar Antarabangsa', login: 'Log masuk', register: 'Daftar', logout: 'Log keluar',
+    home: 'Utama', bikes: 'Basikal', currentOrder: 'Sewaan semasa', history: 'Sejarah', profile: 'Profil',
+    announcements: 'Pengumuman', dashboard: 'Pentadbir', users: 'Pengguna', orders: 'Pesanan', stations: 'Stesen',
+    maintenance: 'Penyelenggaraan', rent: 'Sewa', returnBike: 'Pulangkan', save: 'Simpan', search: 'Cari',
+    username: 'Nama pengguna', password: 'Kata laluan', name: 'Nama', email: 'E-mel', phone: 'Telefon',
+    status: 'Status', language: 'Bahasa', bikeModel: 'Model basikal 3D', selectBikeModel: 'Pilih model',
+    modelPreview: 'Pratonton model 3D', payment: 'Bayaran', paymentMockNote: 'Mod simulasi: tiada wang sebenar dicaj.',
+    payAlipay: 'Alipay (simulasi)', payWechat: 'WeChat Pay (simulasi)', paymentSuccess: 'Simulasi bayaran berjaya',
+    modelPublished: 'Diterbitkan', modelDraft: 'Draf', published: 'Diterbitkan', hidden: 'Disembunyikan',
+    create: 'Cipta', edit: 'Edit', action: 'Tindakan', cancel: 'Batal', loading: 'Memuatkan…',
+    available: 'Tersedia', rented: 'Disewa', disabled: 'Dilumpuhkan'
+  },
+  'vi-VN': {
+    app: 'Thuê xe đạp sinh viên quốc tế', login: 'Đăng nhập', register: 'Đăng ký', logout: 'Đăng xuất',
+    home: 'Trang chủ', bikes: 'Xe đạp', currentOrder: 'Đơn hiện tại', history: 'Lịch sử', profile: 'Hồ sơ',
+    announcements: 'Thông báo', dashboard: 'Quản trị', users: 'Người dùng', orders: 'Đơn thuê', stations: 'Trạm',
+    maintenance: 'Bảo trì', rent: 'Thuê', returnBike: 'Trả xe', save: 'Lưu', search: 'Tìm kiếm',
+    username: 'Tên đăng nhập', password: 'Mật khẩu', name: 'Họ tên', email: 'Email', phone: 'Điện thoại',
+    status: 'Trạng thái', language: 'Ngôn ngữ', bikeModel: 'Mẫu xe đạp 3D', selectBikeModel: 'Chọn mẫu',
+    modelPreview: 'Xem trước mẫu 3D', payment: 'Thanh toán', paymentMockNote: 'Chế độ mô phỏng: không trừ tiền thật.',
+    payAlipay: 'Alipay (mô phỏng)', payWechat: 'WeChat Pay (mô phỏng)', paymentSuccess: 'Thanh toán mô phỏng thành công',
+    modelPublished: 'Đã xuất bản', modelDraft: 'Bản nháp', published: 'Đã xuất bản', hidden: 'Đã ẩn',
+    create: 'Tạo', edit: 'Sửa', action: 'Thao tác', cancel: 'Hủy', loading: 'Đang tải…',
+    available: 'Có thể thuê', rented: 'Đang thuê', disabled: 'Đã tắt'
+  },
+  'lo-LA': {
+    app: 'ບໍລິການເຊົ່າລົດຖີບນັກຮຽນນານາຊາດ', login: 'ເຂົ້າລະບົບ', register: 'ລົງທະບຽນ', logout: 'ອອກລະບົບ',
+    home: 'ໜ້າຫຼັກ', bikes: 'ລົດຖີບ', currentOrder: 'ລາຍການປັດຈຸບັນ', history: 'ປະຫວັດ', profile: 'ໂປຣໄຟລ໌',
+    announcements: 'ປະກາດ', dashboard: 'ຜູ້ດູແລ', users: 'ຜູ້ໃຊ້', orders: 'ລາຍການເຊົ່າ', stations: 'ສະຖານີ',
+    maintenance: 'ບຳລຸງຮັກສາ', rent: 'ເຊົ່າ', returnBike: 'ສົ່ງຄືນ', save: 'ບັນທຶກ', search: 'ຄົ້ນຫາ',
+    username: 'ຊື່ຜູ້ໃຊ້', password: 'ລະຫັດຜ່ານ', name: 'ຊື່', email: 'ອີເມວ', phone: 'ໂທລະສັບ',
+    status: 'ສະຖານະ', language: 'ພາສາ', bikeModel: 'ແບບຈຳລອງລົດ 3D', selectBikeModel: 'ເລືອກແບບ',
+    modelPreview: 'ຕົວຢ່າງແບບ 3D', payment: 'ຊຳລະເງິນ', paymentMockNote: 'ໂໝດຈຳລອງ: ບໍ່ມີການຫັກເງິນຈິງ.',
+    payAlipay: 'Alipay (ຈຳລອງ)', payWechat: 'WeChat Pay (ຈຳລອງ)', paymentSuccess: 'ຊຳລະເງິນຈຳລອງສຳເລັດ',
+    modelPublished: 'ເຜີຍແຜ່ແລ້ວ', modelDraft: 'ຮ່າງ', published: 'ເຜີຍແຜ່ແລ້ວ', hidden: 'ເຊື່ອງແລ້ວ',
+    create: 'ສ້າງ', edit: 'ແກ້ໄຂ', action: 'ການກະທຳ', cancel: 'ຍົກເລີກ', loading: 'ກຳລັງໂຫຼດ…',
+    available: 'ພ້ອມເຊົ່າ', rented: 'ກຳລັງເຊົ່າ', disabled: 'ປິດໃຊ້ງານ'
+  }
+};
+for (const [locale, translations] of Object.entries(extraLocales)) {
+  messages[locale] = { ...messages['en-US'], ...translations };
+}
+
 export function t(key) {
-  return messages[state.lang]?.[key] || key;
+  return messages[state.lang]?.[key] || messages['en-US'][key] || key;
 }
 
 export function setLang(lang) {
+  if (!Object.hasOwn(messages, lang)) return;
   state.lang = lang;
   localStorage.setItem('lang', lang);
 }
@@ -441,5 +501,5 @@ export function auditKeys() {
 
 /** 检查一组 key 是否都有译文；返回缺失列表 */
 export function missingKeys(keys) {
-  return keys.filter((k) => !(k in messages['zh-CN']) || !(k in messages['en-US']));
+  return keys.filter((k) => Object.keys(messages).some((lang) => !(k in messages[lang])));
 }

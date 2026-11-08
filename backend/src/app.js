@@ -10,6 +10,8 @@ import maintenanceRoutes from './routes/maintenance.js';
 import announcementRoutes from './routes/announcements.js';
 import dashboardRoutes from './routes/dashboard.js';
 import aiRoutes from './routes/ai.js';
+import modelRoutes from './routes/models.js';
+import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/models', modelRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.use((req, res) => res.status(404).json({ code: 404, message: `Not found: ${req.path}` }));
 app.use((err, _req, res, _next) => {

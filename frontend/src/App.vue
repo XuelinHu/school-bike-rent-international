@@ -18,6 +18,9 @@
         <select :value="state.lang" @change="setLang($event.target.value)">
           <option value="zh-CN">中文</option>
           <option value="en-US">English</option>
+          <option value="ms-MY">Bahasa Melayu</option>
+          <option value="vi-VN">Tiếng Việt</option>
+          <option value="lo-LA">ພາສາລາວ</option>
         </select>
       </nav>
     </header>
